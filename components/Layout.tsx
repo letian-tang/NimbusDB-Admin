@@ -48,7 +48,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 text-gray-900 font-sans overflow-hidden">
+    <div className="fixed inset-0 flex bg-gray-50 text-gray-900 font-sans overflow-hidden">
       {/* Sidebar - Changed to White Theme */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 relative z-20">
         <div className="p-4 border-b border-gray-100">

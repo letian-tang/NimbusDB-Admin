@@ -128,7 +128,7 @@ const AdvancedPanel: React.FC = () => {
             <p className="text-xs text-gray-400 mb-3">仅复制指定的数据库，多个用逗号分隔。</p>
             <div className="flex gap-2 mb-2">
             <input type="text" value={dbsInput} onChange={(e) => setDbsInput(e.target.value)} placeholder="db1,db2 (留空为全部)" className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
-            <button onClick={handleDbsSave} className="bg-slate-800 text-white px-3 py-2 rounded text-xs hover:bg-slate-700 whitespace-nowrap">更新</button>
+            <button onClick={handleDbsSave} className="bg-blue-600 text-white px-3 py-2 rounded text-xs hover:bg-blue-700 whitespace-nowrap">更新</button>
             </div>
         </div>
         <div className="text-[10px] text-gray-400 mt-2">当前生效: <span className="font-mono text-gray-600">{includedDbs || 'ALL'}</span></div>
@@ -218,7 +218,7 @@ const ReplicationPanel: React.FC = () => {
             className={`px-4 py-2 rounded text-xs font-bold border transition-all flex items-center gap-1.5 ${
                 active 
                 ? 'bg-white border-red-200 text-red-600 hover:bg-red-50' 
-                : 'bg-slate-900 border-transparent text-white hover:bg-slate-800'
+                : 'bg-blue-600 border-transparent text-white hover:bg-blue-700'
             }`}
         >
             {actionLoading === loadingKey ? <RefreshCw className="animate-spin" size={14} /> : active ? <><Pause size={14} /> 停止</> : <><Play size={14} /> 启动</>}
@@ -257,21 +257,44 @@ const ReplicationPanel: React.FC = () => {
 
 const PerformancePanel: React.FC = () => {
   const [config, setConfig] = useState<PerformanceConfig | null>(null);
-  const [saving, setSaving] = useState<keyof PerformanceConfig | null>(null);
+  const [formData, setFormData] = useState<Partial<PerformanceConfig>>({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    nimbusService.getPerformanceConfig().then(setConfig);
+    nimbusService.getPerformanceConfig().then(data => {
+      setConfig(data);
+      setFormData(data);
+    });
   }, []);
 
-  const handleUpdate = async (key: keyof PerformanceConfig, valStr: string) => {
+  const handleChange = (key: keyof PerformanceConfig, valStr: string) => {
     const val = parseInt(valStr, 10);
-    if (isNaN(val)) return;
-    setSaving(key);
+    // Allow empty string for better UX while typing, but update state
+    setFormData(prev => ({ ...prev, [key]: isNaN(val) ? 0 : val }));
+  };
+
+  const handleSave = async () => {
+    if (!config) return;
+    setSaving(true);
     try {
-      await nimbusService.updatePerformanceConfig(key, val);
-      if(config) setConfig({ ...config, [key]: val });
+        const promises = [];
+        if (formData.binlog_batch_size !== undefined && formData.binlog_batch_size !== config.binlog_batch_size) {
+            promises.push(nimbusService.updatePerformanceConfig('binlog_batch_size', formData.binlog_batch_size));
+        }
+        if (formData.fetch_batch_size !== undefined && formData.fetch_batch_size !== config.fetch_batch_size) {
+            promises.push(nimbusService.updatePerformanceConfig('fetch_batch_size', formData.fetch_batch_size));
+        }
+        if (formData.flush_interval_ms !== undefined && formData.flush_interval_ms !== config.flush_interval_ms) {
+            promises.push(nimbusService.updatePerformanceConfig('flush_interval_ms', formData.flush_interval_ms));
+        }
+        
+        await Promise.all(promises);
+        
+        const newConfig = await nimbusService.getPerformanceConfig();
+        setConfig(newConfig);
+        setFormData(newConfig);
     } finally {
-      setSaving(null);
+        setSaving(false);
     }
   };
 
@@ -296,13 +319,21 @@ const PerformancePanel: React.FC = () => {
                 <input 
                     type="number" 
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm font-mono focus:ring-1 focus:ring-blue-500 outline-none text-right"
-                    defaultValue={config[f.key as keyof PerformanceConfig]}
-                    onBlur={(e) => handleUpdate(f.key as keyof PerformanceConfig, e.target.value)}
+                    value={formData[f.key as keyof PerformanceConfig] ?? ''}
+                    onChange={(e) => handleChange(f.key as keyof PerformanceConfig, e.target.value)}
                 />
-                {saving === f.key && <Save className="text-blue-500 animate-pulse absolute right-[-24px] top-2.5" size={16} />}
             </div>
           </div>
         ))}
+      </div>
+       <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+        <button 
+            onClick={handleSave} 
+            disabled={saving}
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded text-sm font-medium transition-colors disabled:opacity-70"
+        >
+          {saving ? <Save className="animate-spin" size={16} /> : <Save size={16} />} 保存性能配置
+        </button>
       </div>
     </div>
   );
