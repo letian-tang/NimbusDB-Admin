@@ -1,3 +1,4 @@
+
 export enum ReplicationState {
   ON = 'ON',
   OFF = 'OFF',
@@ -52,4 +53,15 @@ export interface NimbusConnection {
   created_at: number;
 }
 
-export type ViewState = 'dashboard' | 'sql' | 'replication' | 'performance' | 'source' | 'advanced' | 'connections';
+export interface User {
+  id: number;
+  username: string;
+  created_at: number;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+export type ViewState = 'dashboard' | 'sql' | 'replication' | 'performance' | 'source' | 'advanced' | 'connections' | 'users';

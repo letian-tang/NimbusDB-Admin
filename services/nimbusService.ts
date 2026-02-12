@@ -1,31 +1,98 @@
-import { ReplicationStatus, ReplicationState, RunningState, PerformanceConfig, BinlogPosition, MySqlSourceConfig, NimbusConnection, QueryResult } from '../types';
+import { ReplicationStatus, ReplicationState, RunningState, PerformanceConfig, BinlogPosition, MySqlSourceConfig, NimbusConnection, QueryResult, User, AuthResponse } from '../types';
 
-// The service now acts as a client-side wrapper for our Next.js API
 class NimbusService {
   private activeId: string | null = null;
+  private token: string | null = null;
+  private user: User | null = null;
+
   private STORAGE_KEY_ACTIVE = 'nimbus_active_id_v2';
+  private STORAGE_KEY_TOKEN = 'nimbus_auth_token';
+  private STORAGE_KEY_USER = 'nimbus_auth_user';
 
   constructor() {
     if (typeof window !== 'undefined') {
       this.activeId = localStorage.getItem(this.STORAGE_KEY_ACTIVE);
+      this.token = localStorage.getItem(this.STORAGE_KEY_TOKEN);
+      const userStr = localStorage.getItem(this.STORAGE_KEY_USER);
+      if (userStr) {
+        try { this.user = JSON.parse(userStr); } catch(e) {}
+      }
     }
+  }
+
+  isLoggedIn(): boolean {
+    return !!this.token;
+  }
+
+  getCurrentUser(): User | null {
+    return this.user;
+  }
+
+  async login(username: string, password: string): Promise<void> {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '登录失败');
+
+    this.token = data.token;
+    this.user = data.user;
+    localStorage.setItem(this.STORAGE_KEY_TOKEN, data.token);
+    localStorage.setItem(this.STORAGE_KEY_USER, JSON.stringify(data.user));
+  }
+
+  logout() {
+    this.token = null;
+    this.user = null;
+    localStorage.removeItem(this.STORAGE_KEY_TOKEN);
+    localStorage.removeItem(this.STORAGE_KEY_USER);
+    window.location.reload();
   }
 
   // --- API Helpers ---
 
   private async apiCall(endpoint: string, method: string = 'GET', body?: any) {
+    const headers: any = { 'Content-Type': 'application/json' };
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
     const res = await fetch(endpoint, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: body ? JSON.stringify(body) : undefined,
     });
     
+    if (res.status === 401) {
+      this.logout();
+      throw new Error("会话已过期，请重新登录");
+    }
+
     const data = await res.json();
     if (!res.ok) {
       throw new Error(data.error || 'API request failed');
     }
     return data;
   }
+
+  // --- User Management ---
+  
+  async getUsers(): Promise<User[]> {
+    return this.apiCall('/api/auth/user');
+  }
+
+  async createUser(username: string, password: string): Promise<void> {
+    await this.apiCall('/api/auth/user', 'POST', { username, password });
+  }
+
+  async changePassword(password: string, targetUserId?: number): Promise<void> {
+    await this.apiCall('/api/auth/user', 'PUT', { password, targetUserId });
+  }
+
+  // --- Existing Logic ---
 
   private async runSql(sql: string): Promise<QueryResult> {
     if (!this.activeId) throw new Error("No active connection selected");
@@ -60,27 +127,15 @@ class NimbusService {
   async setActiveId(id: string): Promise<void> {
     this.activeId = id;
     localStorage.setItem(this.STORAGE_KEY_ACTIVE, id);
-    // Simple ping to verify connection
     await this.runSql('SELECT 1'); 
-  }
-
-  getActiveConnection(): NimbusConnection | undefined {
-    // This is synchronous in UI but we need to fetch list to know details.
-    // For now we assume the UI calls getConnections() and finds the matching ID.
-    // This method is less useful now, UI should handle state.
-    // Returning undefined to force UI to look it up from its list.
-    return undefined; 
   }
 
   // --- Replication ---
 
   async getReplicationStatus(): Promise<ReplicationStatus> {
-    // Execute: SHOW NIMBUS REPLICATION
     const result = await this.runSql('SHOW NIMBUS REPLICATION');
     const row = result.rows[0];
-    
     if (!row) throw new Error("Failed to retrieve replication status");
-
     return {
       full_replication: row.full_replication as ReplicationState,
       incremental_replication: row.incremental_replication as ReplicationState,
@@ -102,12 +157,9 @@ class NimbusService {
   // --- Performance ---
 
   async getPerformanceConfig(): Promise<PerformanceConfig> {
-    // Execute: SHOW NIMBUS PERFORMANCE
     const result = await this.runSql('SHOW NIMBUS PERFORMANCE');
     const row = result.rows[0];
-    
     if (!row) throw new Error("Failed to retrieve performance config");
-
     return {
       binlog_batch_size: Number(row.binlog_batch_size),
       fetch_batch_size: Number(row.fetch_batch_size),
@@ -116,19 +168,16 @@ class NimbusService {
   }
 
   async updatePerformanceConfig(key: keyof PerformanceConfig, value: number): Promise<void> {
-    const sqlKey = key.toUpperCase(); // e.g. BINLOG_BATCH_SIZE
+    const sqlKey = key.toUpperCase();
     await this.runSql(`SET NIMBUS ${sqlKey} = ${value}`);
   }
 
   // --- Binlog ---
 
   async getBinlogPosition(): Promise<BinlogPosition> {
-    // Execute: SHOW NIMBUS BINLOG
     const result = await this.runSql('SHOW NIMBUS BINLOG');
     const row = result.rows[0];
-
     if (!row) throw new Error("Failed to retrieve binlog position");
-
     return {
       file: row.file,
       position: Number(row.position),
@@ -138,32 +187,25 @@ class NimbusService {
   }
 
   async setBinlogPosition(file: string, position: number): Promise<void> {
-    // SET NIMBUS BINLOG_POSITION = 'file' pos
     await this.runSql(`SET NIMBUS BINLOG_POSITION = '${file}' ${position}`);
   }
 
   // --- Source ---
 
   async getSourceConfig(): Promise<MySqlSourceConfig> {
-    // Execute: SHOW NIMBUS MYSQL
     const result = await this.runSql('SHOW NIMBUS MYSQL');
     const row = result.rows[0];
-
     if (!row) throw new Error("Failed to retrieve mysql source config");
-
     return {
       mysql_host: row.mysql_host,
       mysql_port: Number(row.mysql_port),
       mysql_user: row.mysql_user,
-      // Password is usually masked or not returned by SHOW commands for security, 
-      // but let's assume it returns what the protocol sends
       mysql_password: row.mysql_password, 
       mysql_server_id: Number(row.mysql_server_id),
     };
   }
 
   async updateSourceConfig(config: Partial<MySqlSourceConfig>): Promise<void> {
-    // Generates multiple SET commands
     if (config.mysql_host) await this.runSql(`SET NIMBUS MYSQL_HOST = '${config.mysql_host}'`);
     if (config.mysql_port) await this.runSql(`SET NIMBUS MYSQL_PORT = ${config.mysql_port}`);
     if (config.mysql_user) await this.runSql(`SET NIMBUS MYSQL_USER = '${config.mysql_user}'`);
@@ -174,9 +216,7 @@ class NimbusService {
   // --- Included DBs ---
 
   async getIncludedDbs(): Promise<string> {
-    // Execute: SHOW NIMBUS INCLUDED_DBS
     const result = await this.runSql('SHOW NIMBUS INCLUDED_DBS');
-    // Assuming returns a column named 'included_dbs' or similar, or just the first column
     const row = result.rows[0];
     if (!row) return "";
     return Object.values(row)[0] as string || "";

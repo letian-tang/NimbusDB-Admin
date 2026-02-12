@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import db from '../../../lib/db';
 import { NimbusConnection } from '../../../types';
+import { isAuthenticated } from '../../../lib/auth';
 
 // GET: List all connections
-export async function GET() {
+export async function GET(request: Request) {
+  if (!isAuthenticated(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const stmt = db.prepare('SELECT * FROM connections ORDER BY created_at DESC');
     const connections = stmt.all();
@@ -15,6 +19,9 @@ export async function GET() {
 
 // POST: Create or Update a connection
 export async function POST(request: Request) {
+  if (!isAuthenticated(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const body = await request.json();
     const { id, name, host, port, username, password, created_at } = body as NimbusConnection;
@@ -38,6 +45,9 @@ export async function POST(request: Request) {
 
 // DELETE: Remove a connection
 export async function DELETE(request: Request) {
+  if (!isAuthenticated(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

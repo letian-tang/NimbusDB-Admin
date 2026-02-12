@@ -9,28 +9,45 @@ import PerformanceConfigView from './views/PerformanceConfigView';
 import SourceConfigView from './views/SourceConfigView';
 import AdvancedView from './views/AdvancedView';
 import ConnectionManager from './views/ConnectionManager';
+import LoginView from './views/LoginView';
+import UserManagement from './views/UserManagement';
 import { ViewState } from './types';
 import { nimbusService } from './services/nimbusService';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [isReady, setIsReady] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // On load, verify we have an active connection.
-    // If not, force user to connection manager.
+    // 1. Check Auth
+    if (!nimbusService.isLoggedIn()) {
+      setIsAuthenticated(false);
+      setIsReady(true);
+      return;
+    }
+    setIsAuthenticated(true);
+
+    // 2. Check Active Connection
     const checkInit = async () => {
       const activeId = nimbusService.getActiveId();
       if (!activeId) {
         setCurrentView('connections');
-      } else {
-        // Optional: Validate if the ID still exists in DB?
-        // For speed, we just assume it's valid until a query fails.
       }
       setIsReady(true);
     };
     checkInit();
   }, []);
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    const activeId = nimbusService.getActiveId();
+    if (!activeId) {
+      setCurrentView('connections');
+    } else {
+      setCurrentView('dashboard');
+    }
+  };
 
   const renderView = () => {
     switch (currentView) {
@@ -48,12 +65,18 @@ const App: React.FC = () => {
         return <AdvancedView />;
       case 'connections':
         return <ConnectionManager onConnect={() => setCurrentView('dashboard')} />;
+      case 'users':
+        return <UserManagement />;
       default:
         return <Dashboard />;
     }
   };
 
   if (!isReady) return null;
+
+  if (!isAuthenticated) {
+    return <LoginView onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <Layout currentView={currentView} setCurrentView={setCurrentView}>

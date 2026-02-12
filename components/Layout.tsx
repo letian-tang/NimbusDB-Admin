@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ViewState, NimbusConnection } from '../types';
-import { Activity, Database, Settings, Sliders, Server, HardDrive, ChevronsUpDown, Plus, LogOut } from 'lucide-react';
+import { Activity, Database, Settings, Sliders, Server, HardDrive, ChevronsUpDown, Plus, LogOut, User, Shield } from 'lucide-react';
 import { nimbusService } from '../services/nimbusService';
 
 interface LayoutProps {
@@ -11,12 +11,11 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }) => {
   const [activeConn, setActiveConn] = useState<NimbusConnection | undefined>(undefined);
+  const [currentUser, setCurrentUser] = useState(nimbusService.getCurrentUser());
 
   const checkConnection = async () => {
-    // 1. Get active ID
     const id = nimbusService.getActiveId();
     if (id) {
-      // 2. Fetch all connections to find details (Optimization: could add getById API)
       try {
         const conns = await nimbusService.getConnections();
         const found = conns.find(c => c.id === id);
@@ -31,7 +30,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
 
   useEffect(() => {
     checkConnection();
-  }, [currentView]); // Re-check when view changes
+  }, [currentView]);
 
   const navItems = [
     { id: 'dashboard', label: '概览', icon: Activity },
@@ -44,6 +43,10 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
 
   const handleSwitchView = (id: string) => {
     setCurrentView(id as ViewState);
+  };
+
+  const handleLogout = () => {
+    nimbusService.logout();
   };
 
   return (
@@ -122,13 +125,30 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
           )}
         </nav>
 
-        <div className="p-4 border-t border-slate-700 bg-slate-900">
+        {/* User Footer */}
+        <div className="p-4 border-t border-slate-700 bg-slate-900 space-y-2">
+          <div className="flex items-center gap-3 px-2 mb-2">
+             <div className="bg-slate-700 p-1.5 rounded-full text-slate-300">
+               <User size={16} />
+             </div>
+             <div className="flex-1 min-w-0">
+               <div className="text-sm font-medium text-white truncate">{currentUser?.username || 'Admin'}</div>
+             </div>
+          </div>
+          
           <button 
-            onClick={() => setCurrentView('connections')}
-            className="flex items-center gap-2 text-xs text-slate-400 hover:text-white w-full px-2 py-1 rounded hover:bg-slate-800 transition-colors"
+             onClick={() => setCurrentView('users')}
+             className={`flex items-center gap-2 text-xs w-full px-2 py-1.5 rounded hover:bg-slate-800 transition-colors ${currentView === 'users' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
           >
-            <Settings size={14} />
-            管理所有连接
+             <Shield size={14} /> 用户管理
+          </button>
+
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-xs text-slate-400 hover:text-red-400 w-full px-2 py-1.5 rounded hover:bg-slate-800 transition-colors"
+          >
+            <LogOut size={14} />
+            退出登录
           </button>
         </div>
       </aside>
@@ -137,7 +157,11 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-gray-50/50">
         <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shadow-sm z-10">
           <h2 className="text-xl font-bold text-gray-800 capitalize flex items-center gap-2">
-            {currentView === 'connections' ? '连接管理' : navItems.find(n => n.id === currentView)?.label}
+            {currentView === 'connections' 
+              ? '连接管理' 
+              : currentView === 'users' 
+                ? '用户管理'
+                : navItems.find(n => n.id === currentView)?.label}
           </h2>
           <div className="flex items-center gap-4">
             {activeConn ? (

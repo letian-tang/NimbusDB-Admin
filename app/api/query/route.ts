@@ -2,8 +2,13 @@ import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
 import db from '../../../lib/db';
 import { NimbusConnection } from '../../../types';
+import { isAuthenticated } from '../../../lib/auth';
 
 export async function POST(request: Request) {
+  if (!isAuthenticated(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let connection: mysql.Connection | null = null;
   
   try {
@@ -34,25 +39,18 @@ export async function POST(request: Request) {
     });
 
     // 3. Execute Query
-    // mysql2 execute returns [rows, fields]
-    // For general queries we use query() or execute()
     const [rows, fields] = await connection.query(sql);
     
     const endTime = performance.now();
     const duration = Math.round(endTime - startTime);
 
     // 4. Format Output
-    // Extract column names if available, otherwise empty
     const columns = fields ? fields.map(f => f.name) : [];
     
-    // Handle non-select queries (OkPacket)
-    // rows might be an array (SELECT) or an object (INSERT/UPDATE result)
     let resultRows = [];
     if (Array.isArray(rows)) {
         resultRows = rows;
     } else {
-        // It's a result object (like { affectedRows: 1, ... })
-        // We wrap it in an array to display in the table
         resultRows = [rows];
         if (columns.length === 0) {
             columns.push('Result');
