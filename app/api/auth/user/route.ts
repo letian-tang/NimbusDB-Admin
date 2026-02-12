@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isAuthenticated } from '../../../../lib/auth';
-import db, { createUser, updatePassword } from '../../../../lib/db';
+import db, { createUser, updateUser, deleteUser } from '../../../../lib/db';
 
 // Create New User
 export async function POST(request: Request) {
@@ -25,21 +25,46 @@ export async function POST(request: Request) {
   }
 }
 
-// Update Password
+// Update User (Username or Password)
 export async function PUT(request: Request) {
-  const user = isAuthenticated(request);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const currentUser = isAuthenticated(request);
+  if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const { password, targetUserId } = await request.json();
-    if (!password) return NextResponse.json({ error: 'Missing password' }, { status: 400 });
+    const { id, username, password } = await request.json();
+    if (!id || !username) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
 
-    // Users can change their own password, or perhaps admins can change others (logic simplified here to self)
-    // If targetUserId is provided and user is admin? Let's keep it simple: self update or simplistic admin
+    try {
+      updateUser(id, username, password || undefined);
+      return NextResponse.json({ success: true });
+    } catch (e: any) {
+      if (e.message.includes('UNIQUE constraint failed')) {
+        return NextResponse.json({ error: '用户名已存在' }, { status: 400 });
+      }
+      throw e;
+    }
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// Delete User
+export async function DELETE(request: Request) {
+  const currentUser = isAuthenticated(request);
+  if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = parseInt(searchParams.get('id') || '0');
+
+    if (!id) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
+
+    // Optional: Prevent deleting self? 
+    // Allowing it will just cause logout on next action which is fine.
     
-    const idToUpdate = targetUserId ? targetUserId : user.id;
-    updatePassword(idToUpdate, password);
-
+    // Check if it's the last user? (Ideally should prevent locking out system, but let's keep it simple)
+    
+    deleteUser(id);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

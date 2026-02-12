@@ -80,11 +80,24 @@ export function validateSession(token: string) {
   return stmt.get(token, Date.now()) as any;
 }
 
-export function updatePassword(userId: number, newPassword: string) {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const hash = hashPassword(newPassword, salt);
-  const stmt = db.prepare('UPDATE users SET password_hash = ?, salt = ? WHERE id = ?');
-  stmt.run(hash, salt, userId);
+export function updateUser(userId: number, username: string, password?: string) {
+  if (password) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = hashPassword(password, salt);
+    const stmt = db.prepare('UPDATE users SET username = ?, password_hash = ?, salt = ? WHERE id = ?');
+    stmt.run(username, hash, salt, userId);
+  } else {
+    const stmt = db.prepare('UPDATE users SET username = ? WHERE id = ?');
+    stmt.run(username, userId);
+  }
+}
+
+export function deleteUser(userId: number) {
+  const txn = db.transaction((id) => {
+     db.prepare('DELETE FROM sessions WHERE user_id = ?').run(id);
+     db.prepare('DELETE FROM users WHERE id = ?').run(id);
+  });
+  txn(userId);
 }
 
 // Bootstrap default admin user if no users exist
