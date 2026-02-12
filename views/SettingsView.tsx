@@ -332,7 +332,7 @@ const SettingsView: React.FC = () => {
 
         {/* 2. Advanced */}
         <section>
-           <SectionHeader icon={Sliders} title="高级设置" colorClass="bg-gray-100 text-gray-600" />
+           <SectionHeader icon={Sliders} title="同步范围与位点" colorClass="bg-gray-100 text-gray-600" />
            <AdvancedPanel />
         </section>
 
