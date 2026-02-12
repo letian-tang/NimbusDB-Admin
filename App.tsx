@@ -10,6 +10,7 @@ import LoginView from './views/LoginView';
 import UserManagement from './views/UserManagement';
 import { ViewState } from './types';
 import { nimbusService } from './services/nimbusService';
+import { ConfirmProvider } from './components/ConfirmDialog';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
@@ -70,9 +71,11 @@ const App: React.FC = () => {
   }
 
   return (
-    <Layout currentView={currentView} setCurrentView={setCurrentView}>
-      {renderView()}
-    </Layout>
+    <ConfirmProvider>
+      <Layout currentView={currentView} setCurrentView={setCurrentView}>
+        {renderView()}
+      </Layout>
+    </ConfirmProvider>
   );
 };
 

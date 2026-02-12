@@ -9,6 +9,7 @@ import {
   ReplicationStatus, ReplicationState, RunningState, 
   PerformanceConfig, MySqlSourceConfig, BinlogPosition 
 } from '../types';
+import { useConfirm } from '../components/ConfirmDialog';
 
 // --- Shared Components ---
 
@@ -96,6 +97,7 @@ const AdvancedPanel: React.FC = () => {
   const [newBinlogFile, setNewBinlogFile] = useState('');
   const [newBinlogPos, setNewBinlogPos] = useState(0);
   const [dbsInput, setDbsInput] = useState('');
+  const confirm = useConfirm();
 
   useEffect(() => {
     Promise.all([
@@ -113,7 +115,15 @@ const AdvancedPanel: React.FC = () => {
   }, []);
 
   const handleBinlogSave = async () => {
-    if(confirm("警告：手动修改位点可能导致数据不一致。是否继续？")) {
+    const isConfirmed = await confirm({
+      title: '修改 Binlog 位点',
+      message: '警告：手动修改 Binlog 位点可能导致数据不一致或丢失。确定要强制覆写吗？',
+      confirmText: '强制覆写',
+      cancelText: '取消',
+      variant: 'danger'
+    });
+
+    if(isConfirmed) {
       await nimbusService.setBinlogPosition(newBinlogFile, newBinlogPos);
       const updated = await nimbusService.getBinlogPosition();
       setBinlog(updated);

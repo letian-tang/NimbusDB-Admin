@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { User, Shield, Edit, Trash2, Plus, X, Lock } from 'lucide-react';
 import { nimbusService } from '../services/nimbusService';
 import { User as UserType } from '../types';
+import { useConfirm } from '../components/ConfirmDialog';
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<UserType[]>([]);
   const [currentUser, setCurrentUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ type: '', text: '' });
+  const confirm = useConfirm();
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,7 +53,14 @@ const UserManagement: React.FC = () => {
   };
 
   const handleDelete = async (user: UserType) => {
-    if (!confirm(`确定要删除用户 "${user.username}" 吗？此操作无法撤销。`)) return;
+    const isConfirmed = await confirm({
+      title: '删除用户',
+      message: `确定要删除用户 "${user.username}" 吗？此操作将永久删除该账号。`,
+      confirmText: '确认删除',
+      variant: 'danger'
+    });
+
+    if (!isConfirmed) return;
     
     setLoading(true);
     try {

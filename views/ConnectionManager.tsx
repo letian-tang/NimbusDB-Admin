@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Power, Database, Edit2, Check, X } from 'lucide-react';
 import { nimbusService } from '../services/nimbusService';
 import { NimbusConnection } from '../types';
+import { useConfirm } from '../components/ConfirmDialog';
 
 interface ConnectionManagerProps {
   onConnect: () => void;
@@ -12,6 +13,7 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({ onConnect }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [connectingId, setConnectingId] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   // Form State
   const [formData, setFormData] = useState<Partial<NimbusConnection>>({
@@ -63,10 +65,17 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({ onConnect }) => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this connection?')) {
+  const handleDelete = async (conn: NimbusConnection) => {
+    const isConfirmed = await confirm({
+      title: '删除连接',
+      message: `确定要删除连接 "${conn.name}" 吗？此操作无法撤销。`,
+      confirmText: '删除',
+      variant: 'danger'
+    });
+
+    if (isConfirmed) {
       try {
-        await nimbusService.deleteConnection(id);
+        await nimbusService.deleteConnection(conn.id);
         loadData();
       } catch (e) {
         console.error(e);
@@ -208,7 +217,7 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({ onConnect }) => {
                     <button onClick={() => handleEdit(conn)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
                       <Edit2 size={16} />
                     </button>
-                    <button onClick={() => handleDelete(conn.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                    <button onClick={() => handleDelete(conn)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
                       <Trash2 size={16} />
                     </button>
                   </div>
