@@ -93,7 +93,7 @@ const UserManagement: React.FC = () => {
   const formatDate = (ts: number) => new Date(ts).toLocaleString();
 
   return (
-    <div className="w-full max-w-6xl space-y-6 relative">
+    <div className="w-full space-y-6 relative">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">

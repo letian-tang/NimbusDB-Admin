@@ -55,35 +55,35 @@ const SourcePanel: React.FC = () => {
 
   return (
     <form onSubmit={handleSave} className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 animate-fade-in">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-5">
+      <div className="space-y-4 mb-6">
         <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-gray-500">主机地址 (Host)</label>
+          <label className="block text-xs font-bold text-gray-700">主机地址 (Host)</label>
           <input type="text" required value={formData.mysql_host || ''} onChange={(e) => handleChange('mysql_host', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
         </div>
         <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-gray-500">端口 (Port)</label>
+          <label className="block text-xs font-bold text-gray-700">端口 (Port)</label>
           <input type="number" required value={formData.mysql_port || 3306} onChange={(e) => handleChange('mysql_port', parseInt(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
         </div>
         <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-gray-500">Server ID</label>
+          <label className="block text-xs font-bold text-gray-700">Server ID</label>
           <input type="number" required value={formData.mysql_server_id || 0} onChange={(e) => handleChange('mysql_server_id', parseInt(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
         </div>
         <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-gray-500">用户名</label>
+          <label className="block text-xs font-bold text-gray-700">用户名</label>
           <input type="text" required value={formData.mysql_user || ''} onChange={(e) => handleChange('mysql_user', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
         </div>
         <div className="space-y-1.5 relative">
-          <label className="block text-xs font-medium text-gray-500">密码</label>
+          <label className="block text-xs font-bold text-gray-700">密码</label>
           <div className="relative">
             <input type={showPass ? "text" : "password"} value={formData.mysql_password || ''} onChange={(e) => handleChange('mysql_password', e.target.value)} placeholder={config.mysql_password ? "********" : "未设置"} className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none pr-9" />
             <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1">{showPass ? <EyeOff size={14} /> : <Eye size={14} />}</button>
           </div>
         </div>
-         <div className="flex items-end">
-            <button type="submit" disabled={saving} className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-70">
-            {saving ? <Save className="animate-spin" size={16} /> : <Save size={16} />} 保存配置
-            </button>
-        </div>
+      </div>
+      <div className="flex justify-start">
+        <button type="submit" disabled={saving} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded text-sm font-medium transition-colors disabled:opacity-70">
+          {saving ? <Save className="animate-spin" size={16} /> : <Save size={16} />} 保存配置
+        </button>
       </div>
     </form>
   );
@@ -312,7 +312,7 @@ const PerformancePanel: React.FC = () => {
 
 const SettingsView: React.FC = () => {
   return (
-    <div className="w-full max-w-6xl pb-10">
+    <div className="w-full pb-10">
       <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-3">
         <div>
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
