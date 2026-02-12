@@ -10,7 +10,7 @@ import {
   PerformanceConfig, MySqlSourceConfig, BinlogPosition 
 } from '../types';
 
-// --- Sub-components for each tab ---
+// --- Sub-components ---
 
 const ReplicationPanel: React.FC = () => {
   const [status, setStatus] = useState<ReplicationStatus | null>(null);
@@ -53,15 +53,19 @@ const ReplicationPanel: React.FC = () => {
     }
   };
 
-  if (!status) return <div className="p-8 text-center text-gray-400">正在加载状态...</div>;
+  if (!status) return <div className="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">正在加载状态...</div>;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-end">
-        <button onClick={fetchStatus} disabled={loading} className="text-gray-400 hover:text-blue-600 transition-colors">
-          <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-        </button>
-      </div>
+    <div className="relative">
+      <button 
+        onClick={fetchStatus} 
+        disabled={loading} 
+        className="absolute -top-12 right-0 text-gray-400 hover:text-blue-600 transition-colors p-2"
+        title="刷新状态"
+      >
+        <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+      </button>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Full Replication */}
         <div className={`border rounded-xl p-6 shadow-sm transition-all ${status.full_replication === ReplicationState.ON ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200 bg-white'}`}>
@@ -151,7 +155,7 @@ const PerformancePanel: React.FC = () => {
     }
   };
 
-  if (!config) return <div className="p-8 text-center text-gray-400">正在加载配置...</div>;
+  if (!config) return <div className="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">正在加载配置...</div>;
 
   const fields = [
     { key: 'binlog_batch_size', label: 'Binlog 批次大小', desc: '增量复制单次事务事件数' },
@@ -160,7 +164,7 @@ const PerformancePanel: React.FC = () => {
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-fade-in">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="divide-y divide-gray-100">
         {fields.map((f) => (
           <div key={f.key} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
@@ -212,10 +216,10 @@ const SourcePanel: React.FC = () => {
     }
   };
 
-  if (!config) return <div className="p-8 text-center text-gray-400">正在加载配置...</div>;
+  if (!config) return <div className="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">正在加载配置...</div>;
 
   return (
-    <form onSubmit={handleSave} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6 animate-fade-in">
+    <form onSubmit={handleSave} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
       <div className="grid grid-cols-3 gap-6">
         <div className="col-span-2 space-y-2">
           <label className="block text-sm font-medium text-gray-700">主机地址 (Host)</label>
@@ -283,7 +287,7 @@ const AdvancedPanel: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Included DBs */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 className="font-semibold text-gray-800 mb-2">白名单数据库</h3>
@@ -315,57 +319,70 @@ const AdvancedPanel: React.FC = () => {
 // --- Main Settings View ---
 
 const SettingsView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'replication' | 'performance' | 'source' | 'advanced'>('replication');
-
-  const tabs = [
-    { id: 'replication', label: '复制控制', icon: Server },
-    { id: 'performance', label: '性能配置', icon: Zap },
-    { id: 'source', label: '源库配置', icon: HardDrive },
-    { id: 'advanced', label: '高级设置', icon: Sliders },
-  ] as const;
-
   return (
-    <div className="max-w-5xl mx-auto min-h-[500px]">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-          <Database className="text-blue-600" size={24} />
+    <div className="max-w-4xl mx-auto pb-20">
+      <div className="mb-10 border-b border-gray-200 pb-6">
+        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+          <Database className="text-blue-600" size={32} />
           实例设置
         </h2>
-        <p className="text-gray-500 text-sm mt-1">集中管理当前实例的运行参数与连接配置。</p>
+        <p className="text-gray-500 mt-2 ml-1">
+          全览并管理当前实例的所有配置项。
+        </p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Sidebar Tabs */}
-        <div className="w-full md:w-64 flex-shrink-0">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-all text-left border-l-4 ${
-                    isActive 
-                      ? 'border-blue-600 bg-blue-50 text-blue-700' 
-                      : 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  <Icon size={18} className={isActive ? 'text-blue-600' : 'text-gray-400'} />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      <div className="space-y-16">
+        {/* Replication */}
+        <section id="replication">
+           <div className="flex items-center justify-between mb-6">
+             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                <Server size={20} />
+              </div>
+              复制控制
+             </h3>
+           </div>
+           <ReplicationPanel />
+        </section>
 
-        {/* Content Area */}
-        <div className="flex-1">
-          {activeTab === 'replication' && <ReplicationPanel />}
-          {activeTab === 'performance' && <PerformancePanel />}
-          {activeTab === 'source' && <SourcePanel />}
-          {activeTab === 'advanced' && <AdvancedPanel />}
-        </div>
+        {/* Source */}
+        <section id="source">
+           <div className="flex items-center justify-between mb-6">
+             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <div className="bg-purple-100 p-2 rounded-lg text-purple-600">
+                <HardDrive size={20} />
+              </div>
+              源库配置
+             </h3>
+           </div>
+           <SourcePanel />
+        </section>
+
+        {/* Performance */}
+        <section id="performance">
+           <div className="flex items-center justify-between mb-6">
+             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <div className="bg-yellow-100 p-2 rounded-lg text-yellow-600">
+                <Zap size={20} />
+              </div>
+              性能配置
+             </h3>
+           </div>
+           <PerformancePanel />
+        </section>
+
+        {/* Advanced */}
+        <section id="advanced">
+           <div className="flex items-center justify-between mb-6">
+             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <div className="bg-gray-100 p-2 rounded-lg text-gray-600">
+                <Sliders size={20} />
+              </div>
+              高级设置
+             </h3>
+           </div>
+           <AdvancedPanel />
+        </section>
       </div>
     </div>
   );
