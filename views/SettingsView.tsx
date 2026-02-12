@@ -92,17 +92,23 @@ const SourcePanel: React.FC = () => {
 const AdvancedPanel: React.FC = () => {
   const [binlog, setBinlog] = useState<BinlogPosition | null>(null);
   const [includedDbs, setIncludedDbs] = useState<string>('');
+  const [schemaSync, setSchemaSync] = useState<boolean>(true);
   const [newBinlogFile, setNewBinlogFile] = useState('');
   const [newBinlogPos, setNewBinlogPos] = useState(0);
   const [dbsInput, setDbsInput] = useState('');
 
   useEffect(() => {
-    Promise.all([nimbusService.getBinlogPosition(), nimbusService.getIncludedDbs()]).then(([b, d]) => {
+    Promise.all([
+      nimbusService.getBinlogPosition(), 
+      nimbusService.getIncludedDbs(),
+      nimbusService.getSchemaSync()
+    ]).then(([b, d, s]) => {
       setBinlog(b);
       setNewBinlogFile(b.file);
       setNewBinlogPos(b.position);
       setIncludedDbs(d);
       setDbsInput(d);
+      setSchemaSync(s);
     });
   }, []);
 
@@ -119,8 +125,34 @@ const AdvancedPanel: React.FC = () => {
     setIncludedDbs(dbsInput);
   };
 
+  const handleSchemaSyncToggle = async () => {
+    try {
+      const newState = !schemaSync;
+      await nimbusService.setSchemaSync(newState);
+      setSchemaSync(newState);
+    } catch (e) {
+      console.error(e);
+      alert("设置失败");
+    }
+  };
+
   return (
     <div className="space-y-4 animate-fade-in">
+      
+      {/* Schema Sync */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 flex items-center justify-between">
+        <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">表结构同步 (Schema Sync)</label>
+            <p className="text-xs text-gray-400">控制是否同步建库、建表及注释等结构变更。</p>
+        </div>
+        <button 
+            onClick={handleSchemaSyncToggle}
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${schemaSync ? 'bg-blue-600' : 'bg-gray-200'}`}
+        >
+            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${schemaSync ? 'translate-x-5' : 'translate-x-0'}`} />
+        </button>
+      </div>
+
       {/* Included DBs */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 flex flex-col justify-between">
         <div>

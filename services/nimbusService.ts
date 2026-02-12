@@ -247,6 +247,26 @@ class NimbusService {
     await this.runSql(`SET NIMBUS INCLUDED_DBS = '${dbs}'`);
   }
 
+  // --- Schema Sync ---
+
+  async getSchemaSync(): Promise<boolean> {
+    try {
+      const result = await this.runSql('SHOW NIMBUS SCHEMA_SYNC');
+      const row = result.rows[0];
+      if (!row) return true; // Default
+      const val = Object.values(row)[0] as string; 
+      return val === 'ON';
+    } catch (e) {
+      console.warn("Failed to get schema sync status, defaulting to true", e);
+      return true;
+    }
+  }
+
+  async setSchemaSync(enable: boolean): Promise<void> {
+    const val = enable ? 'ON' : 'OFF';
+    await this.runSql(`SET NIMBUS SYNC_SCHEMA = ${val}`);
+  }
+
   // --- SQL Execution ---
 
   async executeQuery(sql: string): Promise<QueryResult> {

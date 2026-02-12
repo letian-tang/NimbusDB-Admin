@@ -1,4 +1,5 @@
 import React from 'react';
+import './globals.css';
 
 export const metadata = {
   title: 'NimbusDB Admin',
@@ -13,8 +14,6 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <head>
-        {/* Keeping Tailwind CDN for consistent styling with previous version */}
-        <script src="https://cdn.tailwindcss.com"></script>
       </head>
       <body>{children}</body>
     </html>
