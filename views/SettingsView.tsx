@@ -54,34 +54,34 @@ const SourcePanel: React.FC = () => {
   if (!config) return <div className="p-4 text-center text-xs text-gray-400">加载中...</div>;
 
   return (
-    <form onSubmit={handleSave} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 animate-fade-in">
-      <div className="grid grid-cols-12 gap-4 mb-4">
-        <div className="col-span-6 md:col-span-5">
-          <label className="block text-xs font-medium text-gray-500 mb-1">主机地址 (Host)</label>
-          <input type="text" required value={formData.mysql_host || ''} onChange={(e) => handleChange('mysql_host', e.target.value)} className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+    <form onSubmit={handleSave} className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 animate-fade-in">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-5">
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-gray-500">主机地址 (Host)</label>
+          <input type="text" required value={formData.mysql_host || ''} onChange={(e) => handleChange('mysql_host', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
         </div>
-        <div className="col-span-3 md:col-span-2">
-          <label className="block text-xs font-medium text-gray-500 mb-1">端口</label>
-          <input type="number" required value={formData.mysql_port || 3306} onChange={(e) => handleChange('mysql_port', parseInt(e.target.value))} className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-gray-500">端口 (Port)</label>
+          <input type="number" required value={formData.mysql_port || 3306} onChange={(e) => handleChange('mysql_port', parseInt(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
         </div>
-        <div className="col-span-3 md:col-span-3">
-          <label className="block text-xs font-medium text-gray-500 mb-1">用户名</label>
-          <input type="text" required value={formData.mysql_user || ''} onChange={(e) => handleChange('mysql_user', e.target.value)} className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-gray-500">Server ID</label>
+          <input type="number" required value={formData.mysql_server_id || 0} onChange={(e) => handleChange('mysql_server_id', parseInt(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
         </div>
-        <div className="col-span-6 md:col-span-2 relative">
-          <label className="block text-xs font-medium text-gray-500 mb-1">Server ID</label>
-          <input type="number" required value={formData.mysql_server_id || 0} onChange={(e) => handleChange('mysql_server_id', parseInt(e.target.value))} className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-gray-500">用户名</label>
+          <input type="text" required value={formData.mysql_user || ''} onChange={(e) => handleChange('mysql_user', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
         </div>
-        <div className="col-span-6 md:col-span-4 relative">
-          <label className="block text-xs font-medium text-gray-500 mb-1">密码</label>
+        <div className="space-y-1.5 relative">
+          <label className="block text-xs font-medium text-gray-500">密码</label>
           <div className="relative">
-            <input type={showPass ? "text" : "password"} value={formData.mysql_password || ''} onChange={(e) => handleChange('mysql_password', e.target.value)} placeholder={config.mysql_password ? "********" : "未设置"} className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none pr-8" />
-            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">{showPass ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+            <input type={showPass ? "text" : "password"} value={formData.mysql_password || ''} onChange={(e) => handleChange('mysql_password', e.target.value)} placeholder={config.mysql_password ? "********" : "未设置"} className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none pr-9" />
+            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1">{showPass ? <EyeOff size={14} /> : <Eye size={14} />}</button>
           </div>
         </div>
-         <div className="col-span-12 md:col-span-8 flex items-end justify-end">
-            <button type="submit" disabled={saving} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-sm font-medium transition-colors disabled:opacity-70 h-[34px]">
-            {saving ? <Save className="animate-spin" size={14} /> : <Save size={14} />} 保存配置
+         <div className="flex items-end">
+            <button type="submit" disabled={saving} className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-70">
+            {saving ? <Save className="animate-spin" size={16} /> : <Save size={16} />} 保存配置
             </button>
         </div>
       </div>
@@ -122,31 +122,32 @@ const AdvancedPanel: React.FC = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
       {/* Included DBs */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col justify-between">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 flex flex-col justify-between">
         <div>
-            <label className="block text-xs font-bold text-gray-700 mb-2">白名单数据库 (Included DBs)</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2">白名单数据库 (Included DBs)</label>
+            <p className="text-xs text-gray-400 mb-3">仅复制指定的数据库，多个用逗号分隔。</p>
             <div className="flex gap-2 mb-2">
-            <input type="text" value={dbsInput} onChange={(e) => setDbsInput(e.target.value)} placeholder="db1,db2 (留空为全部)" className="flex-1 px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
-            <button onClick={handleDbsSave} className="bg-slate-800 text-white px-3 py-1.5 rounded text-xs hover:bg-slate-700 whitespace-nowrap">更新</button>
+            <input type="text" value={dbsInput} onChange={(e) => setDbsInput(e.target.value)} placeholder="db1,db2 (留空为全部)" className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+            <button onClick={handleDbsSave} className="bg-slate-800 text-white px-3 py-2 rounded text-xs hover:bg-slate-700 whitespace-nowrap">更新</button>
             </div>
         </div>
-        <div className="text-[10px] text-gray-400">当前生效: <span className="font-mono text-gray-600">{includedDbs || 'ALL'}</span></div>
+        <div className="text-[10px] text-gray-400 mt-2">当前生效: <span className="font-mono text-gray-600">{includedDbs || 'ALL'}</span></div>
       </div>
 
       {/* Binlog Danger Zone */}
-      <div className="bg-red-50 rounded-lg shadow-sm border border-red-200 p-4 relative">
-        <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1.5 text-red-800 font-bold text-xs">
-                <AlertTriangle size={14} /> Binlog 覆写
+      <div className="bg-red-50 rounded-lg shadow-sm border border-red-200 p-5 relative">
+        <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-1.5 text-red-800 font-bold text-sm">
+                <AlertTriangle size={16} /> Binlog 位点覆写
             </div>
-            <div className="text-[10px] text-red-600/70 font-mono">
+            <div className="text-xs text-red-600/70 font-mono">
                 {binlog?.file}:{binlog?.position}
             </div>
         </div>
-        <div className="flex items-center gap-2">
-          <input type="text" placeholder="File" value={newBinlogFile} onChange={(e) => setNewBinlogFile(e.target.value)} className="flex-1 px-2 py-1 border border-red-200 rounded text-xs font-mono focus:border-red-400 outline-none" />
-          <input type="number" placeholder="Pos" value={newBinlogPos} onChange={(e) => setNewBinlogPos(parseInt(e.target.value))} className="w-20 px-2 py-1 border border-red-200 rounded text-xs font-mono focus:border-red-400 outline-none" />
-          <button onClick={handleBinlogSave} className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 whitespace-nowrap">设置</button>
+        <div className="grid grid-cols-12 gap-2">
+          <input type="text" placeholder="File (e.g. mysql-bin.000001)" value={newBinlogFile} onChange={(e) => setNewBinlogFile(e.target.value)} className="col-span-6 px-3 py-2 border border-red-200 rounded text-xs font-mono focus:border-red-400 outline-none" />
+          <input type="number" placeholder="Pos" value={newBinlogPos} onChange={(e) => setNewBinlogPos(parseInt(e.target.value))} className="col-span-3 px-3 py-2 border border-red-200 rounded text-xs font-mono focus:border-red-400 outline-none" />
+          <button onClick={handleBinlogSave} className="col-span-3 bg-red-600 text-white px-2 py-2 rounded text-xs hover:bg-red-700 whitespace-nowrap">强制设置</button>
         </div>
       </div>
     </div>
@@ -197,15 +198,15 @@ const ReplicationPanel: React.FC = () => {
   if (!status) return <div className="p-4 text-center text-xs text-gray-400 border border-dashed rounded-lg">加载状态...</div>;
 
   const Card = ({ title, active, running, loadingKey, onToggle, colorClass, bgClass, icon: Icon }: any) => (
-      <div className={`border rounded-lg p-4 shadow-sm flex items-center justify-between transition-colors ${active ? bgClass : 'bg-white border-gray-200'}`}>
-        <div className="flex items-center gap-3">
-             <div className={`p-2 rounded ${active ? colorClass : 'bg-gray-100 text-gray-400'}`}>
-                <Icon size={18} />
+      <div className={`border rounded-lg p-5 shadow-sm flex items-center justify-between transition-colors ${active ? bgClass : 'bg-white border-gray-200'}`}>
+        <div className="flex items-center gap-4">
+             <div className={`p-3 rounded-lg ${active ? colorClass : 'bg-gray-100 text-gray-400'}`}>
+                <Icon size={20} />
              </div>
              <div>
                  <h4 className="font-bold text-gray-800 text-sm">{title}</h4>
-                 <div className="flex items-center gap-2 mt-0.5">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${running === RunningState.Running ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                 <div className="flex items-center gap-2 mt-1">
+                    <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${running === RunningState.Running ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
                         {running === RunningState.Running ? 'RUNNING' : 'STOPPED'}
                     </span>
                  </div>
@@ -214,13 +215,13 @@ const ReplicationPanel: React.FC = () => {
         <button
             onClick={onToggle}
             disabled={!!actionLoading}
-            className={`px-3 py-1.5 rounded text-xs font-bold border transition-all flex items-center gap-1 ${
+            className={`px-4 py-2 rounded text-xs font-bold border transition-all flex items-center gap-1.5 ${
                 active 
                 ? 'bg-white border-red-200 text-red-600 hover:bg-red-50' 
                 : 'bg-slate-900 border-transparent text-white hover:bg-slate-800'
             }`}
         >
-            {actionLoading === loadingKey ? <RefreshCw className="animate-spin" size={12} /> : active ? <><Pause size={12} /> 停止</> : <><Play size={12} /> 启动</>}
+            {actionLoading === loadingKey ? <RefreshCw className="animate-spin" size={14} /> : active ? <><Pause size={14} /> 停止</> : <><Play size={14} /> 启动</>}
         </button>
       </div>
   );
@@ -277,29 +278,29 @@ const PerformancePanel: React.FC = () => {
   if (!config) return <div className="p-4 text-center text-xs text-gray-400">加载配置...</div>;
 
   const fields = [
-    { key: 'binlog_batch_size', label: 'Binlog Batch', desc: '增量事件批次' },
-    { key: 'fetch_batch_size', label: 'Fetch Batch', desc: '全量拉取行数' },
-    { key: 'flush_interval_ms', label: 'Flush (ms)', desc: '刷盘间隔' },
+    { key: 'binlog_batch_size', label: 'Binlog Batch Size', desc: '增量复制单次处理事件数 (推荐: 1000-5000)' },
+    { key: 'fetch_batch_size', label: 'Fetch Batch Size', desc: '全量拉取单次获取行数 (推荐: 10000+)' },
+    { key: 'flush_interval_ms', label: 'Flush Interval (ms)', desc: '数据刷盘间隔，越低越安全但影响性能' },
   ];
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 animate-fade-in overflow-hidden">
-      <div className="flex divide-x divide-gray-100">
+      <div className="divide-y divide-gray-100">
         {fields.map((f) => (
-          <div key={f.key} className="flex-1 p-3 hover:bg-gray-50 transition-colors">
-            <div className="flex justify-between items-start mb-1">
-                 <div>
-                    <div className="text-xs font-bold text-gray-700">{f.label}</div>
-                    <div className="text-[10px] text-gray-400">{f.desc}</div>
-                 </div>
-                 {saving === f.key && <Save className="text-blue-500 animate-pulse" size={12} />}
+          <div key={f.key} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+            <div>
+                 <div className="text-sm font-bold text-gray-800">{f.label}</div>
+                 <div className="text-xs text-gray-500 mt-1">{f.desc}</div>
             </div>
-            <input 
-                type="number" 
-                className="w-full px-2 py-1 bg-gray-50 border border-gray-200 rounded text-sm font-mono focus:ring-1 focus:ring-blue-500 outline-none text-right"
-                defaultValue={config[f.key as keyof PerformanceConfig]}
-                onBlur={(e) => handleUpdate(f.key as keyof PerformanceConfig, e.target.value)}
-            />
+            <div className="w-40 relative">
+                <input 
+                    type="number" 
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm font-mono focus:ring-1 focus:ring-blue-500 outline-none text-right"
+                    defaultValue={config[f.key as keyof PerformanceConfig]}
+                    onBlur={(e) => handleUpdate(f.key as keyof PerformanceConfig, e.target.value)}
+                />
+                {saving === f.key && <Save className="text-blue-500 animate-pulse absolute right-[-24px] top-2.5" size={16} />}
+            </div>
           </div>
         ))}
       </div>
@@ -311,7 +312,7 @@ const PerformancePanel: React.FC = () => {
 
 const SettingsView: React.FC = () => {
   return (
-    <div className="max-w-4xl mx-auto pb-10">
+    <div className="w-full max-w-6xl pb-10">
       <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-3">
         <div>
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
