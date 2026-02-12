@@ -1,0 +1,5 @@
+{
+  "name": "NimbusDB Admin",
+  "description": "NimbusDB 管理后台，用于控制复制、性能设置和执行 SQL 查询。",
+  "requestFramePermissions": []
+}
