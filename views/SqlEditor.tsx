@@ -109,7 +109,7 @@ const SqlEditor: React.FC = () => {
           )}
         </div>
         
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto pb-6">
           {result ? (
             <>
               {result.columns.length > 0 ? (
