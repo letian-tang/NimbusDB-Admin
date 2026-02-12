@@ -10,7 +10,148 @@ import {
   PerformanceConfig, MySqlSourceConfig, BinlogPosition 
 } from '../types';
 
+// --- Shared Components ---
+
+const SectionHeader: React.FC<{ icon: React.ElementType, title: string, colorClass: string }> = ({ icon: Icon, title, colorClass }) => (
+  <div className="flex items-center gap-2 mb-3">
+    <div className={`p-1.5 rounded-md ${colorClass}`}>
+      <Icon size={16} />
+    </div>
+    <h3 className="font-bold text-gray-800 text-sm">{title}</h3>
+  </div>
+);
+
 // --- Sub-components ---
+
+const SourcePanel: React.FC = () => {
+  const [formData, setFormData] = useState<Partial<MySqlSourceConfig>>({});
+  const [config, setConfig] = useState<MySqlSourceConfig | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+
+  useEffect(() => {
+    nimbusService.getSourceConfig().then(data => {
+      setConfig(data);
+      setFormData(data);
+    });
+  }, []);
+
+  const handleChange = (key: keyof MySqlSourceConfig, val: string | number) => {
+    setFormData(prev => ({ ...prev, [key]: val }));
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await nimbusService.updateSourceConfig(formData);
+      setConfig(formData as MySqlSourceConfig);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!config) return <div className="p-4 text-center text-xs text-gray-400">加载中...</div>;
+
+  return (
+    <form onSubmit={handleSave} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 animate-fade-in">
+      <div className="grid grid-cols-12 gap-4 mb-4">
+        <div className="col-span-6 md:col-span-5">
+          <label className="block text-xs font-medium text-gray-500 mb-1">主机地址 (Host)</label>
+          <input type="text" required value={formData.mysql_host || ''} onChange={(e) => handleChange('mysql_host', e.target.value)} className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+        </div>
+        <div className="col-span-3 md:col-span-2">
+          <label className="block text-xs font-medium text-gray-500 mb-1">端口</label>
+          <input type="number" required value={formData.mysql_port || 3306} onChange={(e) => handleChange('mysql_port', parseInt(e.target.value))} className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+        </div>
+        <div className="col-span-3 md:col-span-3">
+          <label className="block text-xs font-medium text-gray-500 mb-1">用户名</label>
+          <input type="text" required value={formData.mysql_user || ''} onChange={(e) => handleChange('mysql_user', e.target.value)} className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+        </div>
+        <div className="col-span-6 md:col-span-2 relative">
+          <label className="block text-xs font-medium text-gray-500 mb-1">Server ID</label>
+          <input type="number" required value={formData.mysql_server_id || 0} onChange={(e) => handleChange('mysql_server_id', parseInt(e.target.value))} className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+        </div>
+        <div className="col-span-6 md:col-span-4 relative">
+          <label className="block text-xs font-medium text-gray-500 mb-1">密码</label>
+          <div className="relative">
+            <input type={showPass ? "text" : "password"} value={formData.mysql_password || ''} onChange={(e) => handleChange('mysql_password', e.target.value)} placeholder={config.mysql_password ? "********" : "未设置"} className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none pr-8" />
+            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">{showPass ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+          </div>
+        </div>
+         <div className="col-span-12 md:col-span-8 flex items-end justify-end">
+            <button type="submit" disabled={saving} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-sm font-medium transition-colors disabled:opacity-70 h-[34px]">
+            {saving ? <Save className="animate-spin" size={14} /> : <Save size={14} />} 保存配置
+            </button>
+        </div>
+      </div>
+    </form>
+  );
+};
+
+const AdvancedPanel: React.FC = () => {
+  const [binlog, setBinlog] = useState<BinlogPosition | null>(null);
+  const [includedDbs, setIncludedDbs] = useState<string>('');
+  const [newBinlogFile, setNewBinlogFile] = useState('');
+  const [newBinlogPos, setNewBinlogPos] = useState(0);
+  const [dbsInput, setDbsInput] = useState('');
+
+  useEffect(() => {
+    Promise.all([nimbusService.getBinlogPosition(), nimbusService.getIncludedDbs()]).then(([b, d]) => {
+      setBinlog(b);
+      setNewBinlogFile(b.file);
+      setNewBinlogPos(b.position);
+      setIncludedDbs(d);
+      setDbsInput(d);
+    });
+  }, []);
+
+  const handleBinlogSave = async () => {
+    if(confirm("警告：手动修改位点可能导致数据不一致。是否继续？")) {
+      await nimbusService.setBinlogPosition(newBinlogFile, newBinlogPos);
+      const updated = await nimbusService.getBinlogPosition();
+      setBinlog(updated);
+    }
+  };
+
+  const handleDbsSave = async () => {
+    await nimbusService.setIncludedDbs(dbsInput);
+    setIncludedDbs(dbsInput);
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+      {/* Included DBs */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col justify-between">
+        <div>
+            <label className="block text-xs font-bold text-gray-700 mb-2">白名单数据库 (Included DBs)</label>
+            <div className="flex gap-2 mb-2">
+            <input type="text" value={dbsInput} onChange={(e) => setDbsInput(e.target.value)} placeholder="db1,db2 (留空为全部)" className="flex-1 px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+            <button onClick={handleDbsSave} className="bg-slate-800 text-white px-3 py-1.5 rounded text-xs hover:bg-slate-700 whitespace-nowrap">更新</button>
+            </div>
+        </div>
+        <div className="text-[10px] text-gray-400">当前生效: <span className="font-mono text-gray-600">{includedDbs || 'ALL'}</span></div>
+      </div>
+
+      {/* Binlog Danger Zone */}
+      <div className="bg-red-50 rounded-lg shadow-sm border border-red-200 p-4 relative">
+        <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-1.5 text-red-800 font-bold text-xs">
+                <AlertTriangle size={14} /> Binlog 覆写
+            </div>
+            <div className="text-[10px] text-red-600/70 font-mono">
+                {binlog?.file}:{binlog?.position}
+            </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <input type="text" placeholder="File" value={newBinlogFile} onChange={(e) => setNewBinlogFile(e.target.value)} className="flex-1 px-2 py-1 border border-red-200 rounded text-xs font-mono focus:border-red-400 outline-none" />
+          <input type="number" placeholder="Pos" value={newBinlogPos} onChange={(e) => setNewBinlogPos(parseInt(e.target.value))} className="w-20 px-2 py-1 border border-red-200 rounded text-xs font-mono focus:border-red-400 outline-none" />
+          <button onClick={handleBinlogSave} className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 whitespace-nowrap">设置</button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ReplicationPanel: React.FC = () => {
   const [status, setStatus] = useState<ReplicationStatus | null>(null);
@@ -53,84 +194,62 @@ const ReplicationPanel: React.FC = () => {
     }
   };
 
-  if (!status) return <div className="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">正在加载状态...</div>;
+  if (!status) return <div className="p-4 text-center text-xs text-gray-400 border border-dashed rounded-lg">加载状态...</div>;
+
+  const Card = ({ title, active, running, loadingKey, onToggle, colorClass, bgClass, icon: Icon }: any) => (
+      <div className={`border rounded-lg p-4 shadow-sm flex items-center justify-between transition-colors ${active ? bgClass : 'bg-white border-gray-200'}`}>
+        <div className="flex items-center gap-3">
+             <div className={`p-2 rounded ${active ? colorClass : 'bg-gray-100 text-gray-400'}`}>
+                <Icon size={18} />
+             </div>
+             <div>
+                 <h4 className="font-bold text-gray-800 text-sm">{title}</h4>
+                 <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${running === RunningState.Running ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                        {running === RunningState.Running ? 'RUNNING' : 'STOPPED'}
+                    </span>
+                 </div>
+             </div>
+        </div>
+        <button
+            onClick={onToggle}
+            disabled={!!actionLoading}
+            className={`px-3 py-1.5 rounded text-xs font-bold border transition-all flex items-center gap-1 ${
+                active 
+                ? 'bg-white border-red-200 text-red-600 hover:bg-red-50' 
+                : 'bg-slate-900 border-transparent text-white hover:bg-slate-800'
+            }`}
+        >
+            {actionLoading === loadingKey ? <RefreshCw className="animate-spin" size={12} /> : active ? <><Pause size={12} /> 停止</> : <><Play size={12} /> 启动</>}
+        </button>
+      </div>
+  );
 
   return (
-    <div className="relative">
-      <button 
-        onClick={fetchStatus} 
-        disabled={loading} 
-        className="absolute -top-12 right-0 text-gray-400 hover:text-blue-600 transition-colors p-2"
-        title="刷新状态"
-      >
-        <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in relative">
+      <button onClick={fetchStatus} className="absolute -top-8 right-0 text-gray-400 hover:text-blue-600 p-1">
+         <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
       </button>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Full Replication */}
-        <div className={`border rounded-xl p-6 shadow-sm transition-all ${status.full_replication === ReplicationState.ON ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200 bg-white'}`}>
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${status.full_replication === ReplicationState.ON ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
-                <RefreshCw size={24} />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800">全量复制</h3>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${status.full_running === RunningState.Running ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {status.full_running === RunningState.Running ? '运行中' : '已停止'}
-                </span>
-              </div>
-            </div>
-            <span className={`text-sm font-bold ${status.full_replication === ReplicationState.ON ? 'text-blue-600' : 'text-gray-400'}`}>
-              {status.full_replication === ReplicationState.ON ? 'ON' : 'OFF'}
-            </span>
-          </div>
-          <p className="text-sm text-gray-600 mb-6 h-10">从 MySQL 进行初始数据加载。</p>
-          <button
-            onClick={toggleFull}
-            disabled={!!actionLoading}
-            className={`w-full py-2.5 rounded-lg flex items-center justify-center gap-2 font-medium transition-all text-sm ${
-              status.full_replication === ReplicationState.ON
-                ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100'
-                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200 shadow-md'
-            }`}
-          >
-             {actionLoading === 'full' ? <RefreshCw className="animate-spin" size={16} /> : status.full_replication === ReplicationState.ON ? <><Pause size={16} /> 停止</> : <><Play size={16} /> 启动</>}
-          </button>
-        </div>
-
-        {/* Incremental Replication */}
-        <div className={`border rounded-xl p-6 shadow-sm transition-all ${status.incremental_replication === ReplicationState.ON ? 'border-purple-200 bg-purple-50/30' : 'border-gray-200 bg-white'}`}>
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${status.incremental_replication === ReplicationState.ON ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'}`}>
-                <Activity size={24} />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800">增量复制</h3>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${status.incremental_running === RunningState.Running ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {status.incremental_running === RunningState.Running ? '运行中' : '已停止'}
-                </span>
-              </div>
-            </div>
-            <span className={`text-sm font-bold ${status.incremental_replication === ReplicationState.ON ? 'text-purple-600' : 'text-gray-400'}`}>
-              {status.incremental_replication === ReplicationState.ON ? 'ON' : 'OFF'}
-            </span>
-          </div>
-          <p className="text-sm text-gray-600 mb-6 h-10">持续的 Binlog 同步。</p>
-          <button
-            onClick={toggleIncremental}
-            disabled={!!actionLoading}
-            className={`w-full py-2.5 rounded-lg flex items-center justify-center gap-2 font-medium transition-all text-sm ${
-              status.incremental_replication === ReplicationState.ON
-                ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100'
-                : 'bg-purple-600 text-white hover:bg-purple-700 shadow-purple-200 shadow-md'
-            }`}
-          >
-             {actionLoading === 'inc' ? <RefreshCw className="animate-spin" size={16} /> : status.incremental_replication === ReplicationState.ON ? <><Pause size={16} /> 停止</> : <><Play size={16} /> 启动</>}
-          </button>
-        </div>
-      </div>
+      <Card 
+        title="全量复制" 
+        icon={RefreshCw}
+        active={status.full_replication === ReplicationState.ON}
+        running={status.full_running}
+        loadingKey="full"
+        onToggle={toggleFull}
+        colorClass="bg-blue-100 text-blue-600"
+        bgClass="bg-blue-50/50 border-blue-200"
+      />
+      <Card 
+        title="增量复制" 
+        icon={Activity}
+        active={status.incremental_replication === ReplicationState.ON}
+        running={status.incremental_running}
+        loadingKey="inc"
+        onToggle={toggleIncremental}
+        colorClass="bg-purple-100 text-purple-600"
+        bgClass="bg-purple-50/50 border-purple-200"
+      />
     </div>
   );
 };
@@ -155,162 +274,34 @@ const PerformancePanel: React.FC = () => {
     }
   };
 
-  if (!config) return <div className="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">正在加载配置...</div>;
+  if (!config) return <div className="p-4 text-center text-xs text-gray-400">加载配置...</div>;
 
   const fields = [
-    { key: 'binlog_batch_size', label: 'Binlog 批次大小', desc: '增量复制单次事务事件数' },
-    { key: 'fetch_batch_size', label: '全量拉取批次', desc: '全量复制每次获取行数' },
-    { key: 'flush_interval_ms', label: '刷新间隔 (ms)', desc: '数据持久化刷盘频率' },
+    { key: 'binlog_batch_size', label: 'Binlog Batch', desc: '增量事件批次' },
+    { key: 'fetch_batch_size', label: 'Fetch Batch', desc: '全量拉取行数' },
+    { key: 'flush_interval_ms', label: 'Flush (ms)', desc: '刷盘间隔' },
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="divide-y divide-gray-100">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 animate-fade-in overflow-hidden">
+      <div className="flex divide-x divide-gray-100">
         {fields.map((f) => (
-          <div key={f.key} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
-            <div className="flex-1">
-              <label className="block text-sm font-semibold text-gray-900 mb-1">{f.label}</label>
-              <p className="text-sm text-gray-500">{f.desc}</p>
+          <div key={f.key} className="flex-1 p-3 hover:bg-gray-50 transition-colors">
+            <div className="flex justify-between items-start mb-1">
+                 <div>
+                    <div className="text-xs font-bold text-gray-700">{f.label}</div>
+                    <div className="text-[10px] text-gray-400">{f.desc}</div>
+                 </div>
+                 {saving === f.key && <Save className="text-blue-500 animate-pulse" size={12} />}
             </div>
-            <div className="w-40 flex gap-2 relative">
-              <input 
+            <input 
                 type="number" 
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
+                className="w-full px-2 py-1 bg-gray-50 border border-gray-200 rounded text-sm font-mono focus:ring-1 focus:ring-blue-500 outline-none text-right"
                 defaultValue={config[f.key as keyof PerformanceConfig]}
                 onBlur={(e) => handleUpdate(f.key as keyof PerformanceConfig, e.target.value)}
-              />
-              {saving === f.key && <Save className="text-blue-500 animate-pulse absolute right-[-30px] top-2" size={18} />}
-            </div>
+            />
           </div>
         ))}
-      </div>
-    </div>
-  );
-};
-
-const SourcePanel: React.FC = () => {
-  const [formData, setFormData] = useState<Partial<MySqlSourceConfig>>({});
-  const [config, setConfig] = useState<MySqlSourceConfig | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [showPass, setShowPass] = useState(false);
-
-  useEffect(() => {
-    nimbusService.getSourceConfig().then(data => {
-      setConfig(data);
-      setFormData(data);
-    });
-  }, []);
-
-  const handleChange = (key: keyof MySqlSourceConfig, val: string | number) => {
-    setFormData(prev => ({ ...prev, [key]: val }));
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      await nimbusService.updateSourceConfig(formData);
-      setConfig(formData as MySqlSourceConfig);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (!config) return <div className="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">正在加载配置...</div>;
-
-  return (
-    <form onSubmit={handleSave} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 space-y-2">
-          <label className="block text-sm font-medium text-gray-700">主机地址 (Host)</label>
-          <input type="text" required value={formData.mysql_host || ''} onChange={(e) => handleChange('mysql_host', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-        </div>
-        <div className="col-span-1 space-y-2">
-          <label className="block text-sm font-medium text-gray-700">端口 (Port)</label>
-          <input type="number" required value={formData.mysql_port || 3306} onChange={(e) => handleChange('mysql_port', parseInt(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">用户名</label>
-          <input type="text" required value={formData.mysql_user || ''} onChange={(e) => handleChange('mysql_user', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-        </div>
-        <div className="space-y-2 relative">
-          <label className="block text-sm font-medium text-gray-700">密码</label>
-          <div className="relative">
-            <input type={showPass ? "text" : "password"} value={formData.mysql_password || ''} onChange={(e) => handleChange('mysql_password', e.target.value)} placeholder={config.mysql_password ? "********" : "未设置"} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none pr-10" />
-            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">{showPass ? <EyeOff size={16} /> : <Eye size={16} />}</button>
-          </div>
-        </div>
-      </div>
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Server ID</label>
-        <input type="number" required value={formData.mysql_server_id || 0} onChange={(e) => handleChange('mysql_server_id', parseInt(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-      </div>
-      <div className="pt-2 flex justify-end">
-        <button type="submit" disabled={saving} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-70 text-sm">
-          {saving ? <Save className="animate-spin" size={16} /> : <Save size={16} />} 保存配置
-        </button>
-      </div>
-    </form>
-  );
-};
-
-const AdvancedPanel: React.FC = () => {
-  const [binlog, setBinlog] = useState<BinlogPosition | null>(null);
-  const [includedDbs, setIncludedDbs] = useState<string>('');
-  const [newBinlogFile, setNewBinlogFile] = useState('');
-  const [newBinlogPos, setNewBinlogPos] = useState(0);
-  const [dbsInput, setDbsInput] = useState('');
-
-  useEffect(() => {
-    Promise.all([nimbusService.getBinlogPosition(), nimbusService.getIncludedDbs()]).then(([b, d]) => {
-      setBinlog(b);
-      setNewBinlogFile(b.file);
-      setNewBinlogPos(b.position);
-      setIncludedDbs(d);
-      setDbsInput(d);
-    });
-  }, []);
-
-  const handleBinlogSave = async () => {
-    if(confirm("警告：手动修改位点可能导致数据不一致。是否继续？")) {
-      await nimbusService.setBinlogPosition(newBinlogFile, newBinlogPos);
-      const updated = await nimbusService.getBinlogPosition();
-      setBinlog(updated);
-    }
-  };
-
-  const handleDbsSave = async () => {
-    await nimbusService.setIncludedDbs(dbsInput);
-    setIncludedDbs(dbsInput);
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Included DBs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-800 mb-2">白名单数据库</h3>
-        <p className="text-sm text-gray-500 mb-4">仅复制以下数据库（逗号分隔）。留空则复制所有。</p>
-        <div className="flex gap-4">
-          <input type="text" value={dbsInput} onChange={(e) => setDbsInput(e.target.value)} placeholder="db1,db2" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-          <button onClick={handleDbsSave} className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-800">更新</button>
-        </div>
-        <div className="mt-2 text-xs text-gray-400">当前生效: {includedDbs || 'ALL'}</div>
-      </div>
-
-      {/* Binlog Danger Zone */}
-      <div className="bg-red-50/50 rounded-xl shadow-sm border border-red-200 p-6 relative">
-        <h3 className="font-semibold text-red-700 mb-2 flex items-center gap-2"><AlertTriangle size={18} /> Binlog 位点覆写</h3>
-        <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-          <div><span className="text-gray-500 text-xs uppercase">File</span> <div className="font-mono">{binlog?.file}</div></div>
-          <div><span className="text-gray-500 text-xs uppercase">Position</span> <div className="font-mono">{binlog?.position}</div></div>
-        </div>
-        <div className="flex items-end gap-3 pt-3 border-t border-red-100">
-          <div className="flex-1"><label className="text-xs text-gray-500">新文件名</label><input type="text" value={newBinlogFile} onChange={(e) => setNewBinlogFile(e.target.value)} className="w-full px-2 py-1.5 border border-red-200 rounded text-sm font-mono" /></div>
-          <div className="w-32"><label className="text-xs text-gray-500">新位置</label><input type="number" value={newBinlogPos} onChange={(e) => setNewBinlogPos(parseInt(e.target.value))} className="w-full px-2 py-1.5 border border-red-200 rounded text-sm font-mono" /></div>
-          <button onClick={handleBinlogSave} className="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700 h-[34px]">强制设置</button>
-        </div>
       </div>
     </div>
   );
@@ -320,68 +311,40 @@ const AdvancedPanel: React.FC = () => {
 
 const SettingsView: React.FC = () => {
   return (
-    <div className="max-w-4xl mx-auto pb-20">
-      <div className="mb-10 border-b border-gray-200 pb-6">
-        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-          <Database className="text-blue-600" size={32} />
-          实例设置
-        </h2>
-        <p className="text-gray-500 mt-2 ml-1">
-          全览并管理当前实例的所有配置项。
-        </p>
+    <div className="max-w-4xl mx-auto pb-10">
+      <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-3">
+        <div>
+            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <Database className="text-blue-600" size={20} />
+            实例设置
+            </h2>
+            <p className="text-xs text-gray-400 mt-1 ml-7">集中管理运行参数。</p>
+        </div>
       </div>
 
-      <div className="space-y-16">
-        {/* Replication */}
-        <section id="replication">
-           <div className="flex items-center justify-between mb-6">
-             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
-                <Server size={20} />
-              </div>
-              复制控制
-             </h3>
-           </div>
-           <ReplicationPanel />
-        </section>
-
-        {/* Source */}
-        <section id="source">
-           <div className="flex items-center justify-between mb-6">
-             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <div className="bg-purple-100 p-2 rounded-lg text-purple-600">
-                <HardDrive size={20} />
-              </div>
-              源库配置
-             </h3>
-           </div>
+      <div className="space-y-6">
+        {/* 1. Source Config */}
+        <section>
+           <SectionHeader icon={HardDrive} title="源库配置" colorClass="bg-purple-100 text-purple-600" />
            <SourcePanel />
         </section>
 
-        {/* Performance */}
-        <section id="performance">
-           <div className="flex items-center justify-between mb-6">
-             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <div className="bg-yellow-100 p-2 rounded-lg text-yellow-600">
-                <Zap size={20} />
-              </div>
-              性能配置
-             </h3>
-           </div>
-           <PerformancePanel />
+        {/* 2. Advanced */}
+        <section>
+           <SectionHeader icon={Sliders} title="高级设置" colorClass="bg-gray-100 text-gray-600" />
+           <AdvancedPanel />
         </section>
 
-        {/* Advanced */}
-        <section id="advanced">
-           <div className="flex items-center justify-between mb-6">
-             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <div className="bg-gray-100 p-2 rounded-lg text-gray-600">
-                <Sliders size={20} />
-              </div>
-              高级设置
-             </h3>
-           </div>
-           <AdvancedPanel />
+        {/* 3. Replication */}
+        <section>
+           <SectionHeader icon={Server} title="复制控制" colorClass="bg-blue-100 text-blue-600" />
+           <ReplicationPanel />
+        </section>
+
+        {/* 4. Performance */}
+        <section>
+           <SectionHeader icon={Zap} title="性能配置" colorClass="bg-yellow-100 text-yellow-600" />
+           <PerformancePanel />
         </section>
       </div>
     </div>
