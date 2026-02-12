@@ -4,10 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './views/Dashboard';
 import SqlEditor from './views/SqlEditor';
-import ReplicationControl from './views/ReplicationControl';
-import PerformanceConfigView from './views/PerformanceConfigView';
-import SourceConfigView from './views/SourceConfigView';
-import AdvancedView from './views/AdvancedView';
+import SettingsView from './views/SettingsView';
 import ConnectionManager from './views/ConnectionManager';
 import LoginView from './views/LoginView';
 import UserManagement from './views/UserManagement';
@@ -55,14 +52,8 @@ const App: React.FC = () => {
         return <Dashboard />;
       case 'sql':
         return <SqlEditor />;
-      case 'replication':
-        return <ReplicationControl />;
-      case 'performance':
-        return <PerformanceConfigView />;
-      case 'source':
-        return <SourceConfigView />;
-      case 'advanced':
-        return <AdvancedView />;
+      case 'settings':
+        return <SettingsView />;
       case 'connections':
         return <ConnectionManager onConnect={() => setCurrentView('dashboard')} />;
       case 'users':

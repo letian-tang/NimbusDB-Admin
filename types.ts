@@ -19,6 +19,7 @@ export interface ReplicationStatus {
 export interface PerformanceConfig {
   binlog_batch_size: number;
   fetch_batch_size: number;
+  fetch_worker_count?: number; // Optional depending on backend
   flush_interval_ms: number;
 }
 
@@ -64,4 +65,4 @@ export interface AuthResponse {
   user: User;
 }
 
-export type ViewState = 'dashboard' | 'sql' | 'replication' | 'performance' | 'source' | 'advanced' | 'connections' | 'users';
+export type ViewState = 'dashboard' | 'sql' | 'settings' | 'connections' | 'users';

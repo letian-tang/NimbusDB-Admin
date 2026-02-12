@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ViewState, NimbusConnection } from '../types';
-import { Activity, Database, Settings, Sliders, Server, HardDrive, ChevronsUpDown, Plus, LogOut, User, Shield } from 'lucide-react';
+import { Activity, Database, Settings, ChevronsUpDown, Plus, LogOut, User, Shield } from 'lucide-react';
 import { nimbusService } from '../services/nimbusService';
 
 interface LayoutProps {
@@ -33,12 +33,10 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
   }, [currentView]);
 
   const navItems = [
-    { id: 'dashboard', label: '概览', icon: Activity },
-    { id: 'sql', label: 'SQL 编辑器', icon: Database },
-    { id: 'replication', label: '复制控制', icon: Server },
-    { id: 'performance', label: '性能配置', icon: Activity },
-    { id: 'source', label: '源库配置', icon: HardDrive },
-    { id: 'advanced', label: '高级设置', icon: Sliders },
+    { id: 'dashboard', label: '概览', icon: Activity, requireConnection: true },
+    { id: 'sql', label: 'SQL 编辑器', icon: Database, requireConnection: true },
+    { id: 'users', label: '用户管理', icon: Shield, requireConnection: false },
+    { id: 'settings', label: '实例设置', icon: Settings, requireConnection: true },
   ];
 
   const handleSwitchView = (id: string) => {
@@ -87,7 +85,8 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentView === item.id;
-              const isDisabled = !activeConn;
+              // Disable if connection is required but not active
+              const isDisabled = item.requireConnection && !activeConn;
               
               return (
                 <li key={item.id}>
@@ -137,13 +136,6 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
           </div>
           
           <button 
-             onClick={() => setCurrentView('users')}
-             className={`flex items-center gap-2 text-xs w-full px-2 py-1.5 rounded hover:bg-slate-800 transition-colors ${currentView === 'users' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
-          >
-             <Shield size={14} /> 用户管理
-          </button>
-
-          <button 
             onClick={handleLogout}
             className="flex items-center gap-2 text-xs text-slate-400 hover:text-red-400 w-full px-2 py-1.5 rounded hover:bg-slate-800 transition-colors"
           >
@@ -159,9 +151,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
           <h2 className="text-xl font-bold text-gray-800 capitalize flex items-center gap-2">
             {currentView === 'connections' 
               ? '连接管理' 
-              : currentView === 'users' 
-                ? '用户管理'
-                : navItems.find(n => n.id === currentView)?.label}
+              : navItems.find(n => n.id === currentView)?.label || '设置'}
           </h2>
           <div className="flex items-center gap-4">
             {activeConn ? (
