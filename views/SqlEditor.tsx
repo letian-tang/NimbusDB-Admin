@@ -64,7 +64,7 @@ const SqlEditor: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col gap-6">
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4">
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4 flex-shrink-0">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
              <label className="text-sm font-bold text-gray-700">SQL 编辑器</label>
@@ -99,7 +99,7 @@ const SqlEditor: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-0">
+      <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[500px]">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
           <h3 className="font-semibold text-gray-700 text-sm">执行结果</h3>
           {result && (
@@ -114,10 +114,10 @@ const SqlEditor: React.FC = () => {
             <>
               {result.columns.length > 0 ? (
                 <table className="w-full text-left text-sm whitespace-nowrap">
-                  <thead className="bg-gray-50 sticky top-0 z-10">
+                  <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                     <tr>
                       {result.columns.map((col, i) => (
-                        <th key={i} className="px-6 py-3 font-medium text-gray-600 border-b border-gray-200 border-r border-gray-100 last:border-r-0">
+                        <th key={i} className="px-6 py-3 font-medium text-gray-600 border-b border-gray-200 border-r border-gray-100 last:border-r-0 bg-gray-50">
                           {col}
                         </th>
                       ))}
