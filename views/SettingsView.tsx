@@ -120,7 +120,7 @@ const AdvancedPanel: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       {/* Included DBs */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 flex flex-col justify-between">
         <div>
@@ -227,7 +227,7 @@ const ReplicationPanel: React.FC = () => {
   );
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in relative">
+    <div className="space-y-4 animate-fade-in relative">
       <button onClick={fetchStatus} className="absolute -top-8 right-0 text-gray-400 hover:text-blue-600 p-1">
          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
       </button>

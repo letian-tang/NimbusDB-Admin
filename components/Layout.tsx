@@ -49,14 +49,14 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
 
   return (
     <div className="flex h-screen bg-gray-50 text-gray-900 font-sans overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 relative z-20 shadow-xl">
-        <div className="p-4 border-b border-slate-700">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold shadow-lg shadow-blue-900/20">N</span>
+      {/* Sidebar - Changed to White Theme */}
+      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 relative z-20">
+        <div className="p-4 border-b border-gray-100">
+          <div className="flex items-center gap-3 mb-5">
+            <span className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold text-white shadow-md shadow-blue-100">N</span>
             <div>
-              <h1 className="text-lg font-bold leading-none">NimbusDB</h1>
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider">Admin Tool</span>
+              <h1 className="text-lg font-extrabold text-gray-800 leading-none tracking-tight">NimbusDB</h1>
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Admin Tool</span>
             </div>
           </div>
 
@@ -64,24 +64,24 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
           <div className="relative">
             <button 
               onClick={() => setCurrentView('connections')}
-              className="w-full bg-slate-800 hover:bg-slate-700 transition-colors rounded-lg p-2.5 flex items-center justify-between border border-slate-700 group"
+              className="w-full bg-white hover:bg-gray-50 transition-colors rounded-lg p-2.5 flex items-center justify-between border border-gray-200 shadow-sm group"
             >
               <div className="flex items-center gap-3 overflow-hidden">
                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeConn ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`} />
                 <div className="flex flex-col items-start min-w-0">
-                  <span className="text-xs text-slate-400 font-medium">当前实例</span>
-                  <span className="text-sm font-semibold truncate w-full text-left">
+                  <span className="text-xs text-gray-400 font-medium">当前实例</span>
+                  <span className="text-sm font-bold text-gray-700 truncate w-full text-left">
                     {activeConn ? activeConn.name : '未连接'}
                   </span>
                 </div>
               </div>
-              <ChevronsUpDown size={16} className="text-slate-500 group-hover:text-slate-300" />
+              <ChevronsUpDown size={16} className="text-gray-400 group-hover:text-gray-600" />
             </button>
           </div>
         </div>
         
         <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-2">
+          <ul className="space-y-1 px-3">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentView === item.id;
@@ -95,13 +95,13 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
                     disabled={isDisabled}
                     className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
                       isActive 
-                        ? 'bg-blue-600 text-white shadow-md' 
+                        ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100' 
                         : isDisabled 
-                          ? 'text-slate-600 cursor-not-allowed opacity-50' 
-                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          ? 'text-gray-300 cursor-not-allowed' 
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
-                    <Icon size={18} />
+                    <Icon size={18} className={isActive ? "text-blue-600" : ""} />
                     {item.label}
                   </button>
                 </li>
@@ -110,34 +110,36 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
           </ul>
 
           {!activeConn && (
-            <div className="px-6 mt-4">
-              <p className="text-xs text-slate-500 text-center">
-                请先连接一个 NimbusDB 实例以使用管理功能。
-              </p>
-              <button 
-                onClick={() => setCurrentView('connections')}
-                className="mt-3 w-full py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs rounded border border-slate-700 flex items-center justify-center gap-1"
-              >
-                <Plus size={12} /> 去连接
-              </button>
+            <div className="px-6 mt-6">
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <p className="text-xs text-gray-500 text-center mb-3">
+                  请先连接一个 NimbusDB 实例以使用管理功能。
+                </p>
+                <button 
+                  onClick={() => setCurrentView('connections')}
+                  className="w-full py-2 bg-white hover:bg-gray-50 text-blue-600 text-xs font-bold rounded border border-gray-200 shadow-sm flex items-center justify-center gap-1 transition-colors"
+                >
+                  <Plus size={12} /> 去连接
+                </button>
+              </div>
             </div>
           )}
         </nav>
 
         {/* User Footer */}
-        <div className="p-4 border-t border-slate-700 bg-slate-900 space-y-2">
+        <div className="p-4 border-t border-gray-100 bg-gray-50/50 space-y-2">
           <div className="flex items-center gap-3 px-2 mb-2">
-             <div className="bg-slate-700 p-1.5 rounded-full text-slate-300">
+             <div className="bg-white border border-gray-200 p-1.5 rounded-full text-gray-500">
                <User size={16} />
              </div>
              <div className="flex-1 min-w-0">
-               <div className="text-sm font-medium text-white truncate">{currentUser?.username || 'Admin'}</div>
+               <div className="text-sm font-bold text-gray-700 truncate">{currentUser?.username || 'Admin'}</div>
              </div>
           </div>
           
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-2 text-xs text-slate-400 hover:text-red-400 w-full px-2 py-1.5 rounded hover:bg-slate-800 transition-colors"
+            className="flex items-center gap-2 text-xs text-gray-500 hover:text-red-600 w-full px-2 py-1.5 rounded hover:bg-white transition-colors border border-transparent hover:border-gray-100 hover:shadow-sm"
           >
             <LogOut size={14} />
             退出登录
@@ -146,8 +148,8 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-gray-50/50">
-        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shadow-sm z-10">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
+        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between z-10">
           <h2 className="text-xl font-bold text-gray-800 capitalize flex items-center gap-2">
             {currentView === 'connections' 
               ? '连接管理' 
@@ -160,8 +162,8 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
                 {activeConn.host}:{activeConn.port}
               </div>
             ) : (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-700 rounded-full text-xs font-medium border border-red-200">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-500 rounded-full text-xs font-medium border border-gray-200">
+                <div className="w-2 h-2 rounded-full bg-gray-400" />
                 未连接
               </div>
             )}
