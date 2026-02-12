@@ -115,11 +115,12 @@ class NimbusService {
 
   // --- Existing Logic ---
 
-  private async runSql(sql: string): Promise<QueryResult> {
+  private async runSql(sql: string, database?: string): Promise<QueryResult> {
     if (!this.activeId) throw new Error("No active connection selected");
     return this.apiCall('/api/query', 'POST', {
       connectionId: this.activeId,
-      sql
+      sql,
+      database // Optional: pass the current DB context
     });
   }
 
@@ -279,8 +280,8 @@ class NimbusService {
 
   // --- SQL Execution ---
 
-  async executeQuery(sql: string): Promise<QueryResult> {
-    return this.runSql(sql);
+  async executeQuery(sql: string, database?: string): Promise<QueryResult> {
+    return this.runSql(sql, database);
   }
 }
 

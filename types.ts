@@ -42,6 +42,8 @@ export interface QueryResult {
   columns: string[];
   rows: any[];
   duration: number;
+  currentDatabase?: string; // The database context after execution
+  affectedRows?: number;    // For non-SELECT statements
 }
 
 export interface NimbusConnection {
