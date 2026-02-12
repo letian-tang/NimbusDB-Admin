@@ -233,6 +233,16 @@ class NimbusService {
     if (config.mysql_password) await this.runSql(`SET NIMBUS MYSQL_PASSWORD = '${config.mysql_password}'`);
     if (config.mysql_server_id) await this.runSql(`SET NIMBUS MYSQL_SERVER_ID = ${config.mysql_server_id}`);
   }
+  
+  async testSourceConnection(config: Partial<MySqlSourceConfig>): Promise<void> {
+    // Map MySqlSourceConfig keys to the /api/test endpoint expectations
+    await this.apiCall('/api/test', 'POST', {
+      host: config.mysql_host,
+      port: config.mysql_port,
+      user: config.mysql_user,
+      password: config.mysql_password,
+    });
+  }
 
   // --- Included DBs ---
 

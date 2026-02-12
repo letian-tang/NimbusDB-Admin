@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   RefreshCw, Play, Pause, Activity, 
   Save, Zap, HardDrive, Eye, EyeOff, 
-  Sliders, AlertTriangle, Server, Database 
+  Sliders, AlertTriangle, Server, Database, Plug, CheckCircle2, XCircle
 } from 'lucide-react';
 import { nimbusService } from '../services/nimbusService';
 import { 
@@ -29,6 +29,10 @@ const SourcePanel: React.FC = () => {
   const [config, setConfig] = useState<MySqlSourceConfig | null>(null);
   const [saving, setSaving] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  
+  // Test Connection State
+  const [testing, setTesting] = useState(false);
+  const [testMsg, setTestMsg] = useState<{type: 'success'|'error', text: string} | null>(null);
 
   useEffect(() => {
     nimbusService.getSourceConfig().then(data => {
@@ -39,11 +43,27 @@ const SourcePanel: React.FC = () => {
 
   const handleChange = (key: keyof MySqlSourceConfig, val: string | number) => {
     setFormData(prev => ({ ...prev, [key]: val }));
+    // Clear test result on change
+    if (testMsg) setTestMsg(null);
+  };
+
+  const handleTest = async () => {
+    setTesting(true);
+    setTestMsg(null);
+    try {
+      await nimbusService.testSourceConnection(formData);
+      setTestMsg({ type: 'success', text: '连接测试成功！配置有效。' });
+    } catch (e: any) {
+      setTestMsg({ type: 'error', text: '连接失败: ' + (e.message || '网络错误或认证失败') });
+    } finally {
+      setTesting(false);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setTestMsg(null);
     try {
       await nimbusService.updateSourceConfig(formData);
       setConfig(formData as MySqlSourceConfig);
@@ -81,10 +101,33 @@ const SourcePanel: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="flex justify-start">
-        <button type="submit" disabled={saving} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded text-sm font-medium transition-colors disabled:opacity-70">
-          {saving ? <Save className="animate-spin" size={16} /> : <Save size={16} />} 保存配置
-        </button>
+
+      <div className="flex flex-col gap-3">
+        {testMsg && (
+          <div className={`text-xs px-3 py-2 rounded flex items-center gap-2 ${testMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+            {testMsg.type === 'success' ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+            {testMsg.text}
+          </div>
+        )}
+        
+        <div className="flex justify-start gap-3">
+          <button 
+            type="button" 
+            onClick={handleTest}
+            disabled={testing || saving}
+            className="flex items-center gap-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-70"
+          >
+            {testing ? <RefreshCw className="animate-spin" size={16} /> : <Plug size={16} />} 连接测试
+          </button>
+          
+          <button 
+            type="submit" 
+            disabled={saving || testing} 
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded text-sm font-medium transition-colors disabled:opacity-70 shadow-sm"
+          >
+            {saving ? <Save className="animate-spin" size={16} /> : <Save size={16} />} 保存配置
+          </button>
+        </div>
       </div>
     </form>
   );
