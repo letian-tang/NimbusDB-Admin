@@ -63,7 +63,7 @@ const SqlEditor: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col gap-6">
+    <div className="flex flex-col gap-6 min-h-full pb-4">
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4 flex-shrink-0">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -99,7 +99,7 @@ const SqlEditor: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[500px] mb-6">
+      <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[500px]">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
           <h3 className="font-semibold text-gray-700 text-sm">执行结果</h3>
           {result && (
