@@ -1,4 +1,5 @@
 import React from 'react';
+import Script from 'next/script';
 import './globals.css';
 
 export const metadata = {
@@ -14,8 +15,22 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
+        <Script id="aliyun-captcha-config" strategy="beforeInteractive">
+          {`
+            window.AliyunCaptchaConfig = {
+              region: 'cn',
+              prefix: '${process.env.NEXT_PUBLIC_ALIYUN_CAPTCHA_PREFIX || ''}',
+            };
+          `}
+        </Script>
       </head>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <Script
+          src="https://o.alicdn.com/captcha-frontend/aliyunCaptcha/AliyunCaptcha.js"
+          strategy="beforeInteractive"
+        />
+        {children}
+      </body>
     </html>
   );
 }

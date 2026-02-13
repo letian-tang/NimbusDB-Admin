@@ -1,9 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { nimbusService } from '../services/nimbusService';
-import { Lock, User, ArrowRight, AlertCircle } from 'lucide-react';
+import { Lock, User, AlertCircle } from 'lucide-react';
 
 interface LoginViewProps {
   onLoginSuccess: () => void;
+}
+
+// 声明全局方法
+declare global {
+  interface Window {
+    initAliyunCaptcha: (config: {
+      SceneId: string;
+      mode: string;
+      element: string;
+      button: string;
+      success: (captchaVerifyParam: string) => void;
+      fail: (error: any) => void;
+      getInstance: (instance: any) => void;
+      slideStyle?: {
+        width: number;
+        height: number;
+      };
+      language?: string;
+    }) => void;
+  }
 }
 
 const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
@@ -11,19 +31,138 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const captchaInstanceRef = useRef<any>(null);
+  const isInitializedRef = useRef(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // 使用 ref 存储最新的用户名密码，避免闭包问题
+  const usernameRef = useRef('');
+  const passwordRef = useRef('');
+
+  // 同步更新 ref
+  useEffect(() => {
+    usernameRef.current = username;
+  }, [username]);
+
+  useEffect(() => {
+    passwordRef.current = password;
+  }, [password]);
+
+  // 执行登录
+  const performLogin = async (captchaVerifyParam: string) => {
     setLoading(true);
     setError('');
-    
+
+    // 使用 ref 中的最新值
+    const currentUser = usernameRef.current;
+    const currentPass = passwordRef.current;
+
     try {
-      await nimbusService.login(username, password);
+      await nimbusService.login(currentUser, currentPass, captchaVerifyParam);
       onLoginSuccess();
     } catch (err: any) {
       setError(err.message || '登录失败，请检查用户名或密码');
+      // 重新初始化验证码
+      isInitializedRef.current = false;
+      setTimeout(initCaptcha, 100);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 初始化验证码
+  const initCaptcha = () => {
+    if (!window.initAliyunCaptcha || isInitializedRef.current) {
+      return;
+    }
+
+    const sceneId = process.env.NEXT_PUBLIC_ALIYUN_CAPTCHA_SCENE_ID;
+    if (!sceneId || sceneId === 'your_scene_id_here') {
+      console.warn('验证码 SceneId 未配置，跳过验证码初始化');
+      return;
+    }
+
+    try {
+      window.initAliyunCaptcha({
+        SceneId: sceneId,
+        mode: 'popup',
+        element: '#captcha-element',
+        button: '#captcha-button',
+        success: (captchaVerifyParam: string) => {
+          // 验证成功，执行登录（使用 ref 获取最新值）
+          performLogin(captchaVerifyParam);
+        },
+        fail: (error: any) => {
+          console.error('验证码验证失败', error);
+          setError('验证码验证失败，请重试');
+          setLoading(false);
+        },
+        getInstance: (instance: any) => {
+          captchaInstanceRef.current = instance;
+        },
+        slideStyle: {
+          width: 360,
+          height: 40,
+        },
+        language: 'cn',
+      });
+
+      isInitializedRef.current = true;
+    } catch (err) {
+      console.warn('验证码初始化失败', err);
+    }
+  };
+
+  // 初始化验证码（脚本已在 layout.tsx 中全局加载）
+  useEffect(() => {
+    // 等待脚本加载完成
+    const checkAndInit = () => {
+      if (window.initAliyunCaptcha) {
+        initCaptcha();
+      } else {
+        // 脚本还未加载，稍后重试
+        setTimeout(checkAndInit, 100);
+      }
+    };
+    checkAndInit();
+  }, []);
+
+  // 点击登录按钮
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!username || !password) {
+      setError('请输入用户名和密码');
+      return;
+    }
+
+    const sceneId = process.env.NEXT_PUBLIC_ALIYUN_CAPTCHA_SCENE_ID;
+
+    // 如果验证码未配置，直接登录
+    if (!sceneId || sceneId === 'your_scene_id_here') {
+      setLoading(true);
+      try {
+        await nimbusService.login(username, password);
+        onLoginSuccess();
+      } catch (err: any) {
+        setError(err.message || '登录失败，请检查用户名或密码');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // 如果验证码已初始化，点击按钮会自动弹出验证码
+    // 如果未初始化，直接登录
+    if (!isInitializedRef.current) {
+      setLoading(true);
+      try {
+        await nimbusService.login(username, password);
+        onLoginSuccess();
+      } catch (err: any) {
+        setError(err.message || '登录失败，请检查用户名或密码');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -56,8 +195,9 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-800"
-                  placeholder="admin"
+                  placeholder="用户名"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -73,27 +213,31 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-800"
                   placeholder="••••••••"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
 
+            {/* 验证码容器（隐藏） */}
+            <div id="captcha-element" className="hidden"></div>
+
+            {/* 登录按钮，作为验证码触发按钮 */}
             <button
               type="submit"
+              id="captcha-button"
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed mt-4"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                <>
-                  登录
-                </>
+                '登录'
               )}
             </button>
           </form>
-          
+
           <div className="mt-6 text-center text-xs text-gray-400">
-            默认账号: admin / admin
+            @舟谱数据
           </div>
         </div>
       </div>
