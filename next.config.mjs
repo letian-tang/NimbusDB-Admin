@@ -5,9 +5,7 @@ const nextConfig = {
     appIsrStatus: false,
     buildActivity: false,
   },
-  experimental: {
-    serverComponentsExternalPackages: ['better-sqlite3', 'mysql2'],
-  },
+  serverExternalPackages: ['better-sqlite3', 'mysql2'],
 };
 
 export default nextConfig;

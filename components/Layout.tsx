@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ViewState, NimbusConnection } from '../types';
-import { Activity, Database, Settings, ChevronsUpDown, Plus, LogOut, User, Shield } from 'lucide-react';
+import { Activity, Database, Settings, ChevronsUpDown, Plus, LogOut, User, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
 import { nimbusService } from '../services/nimbusService';
 
 interface LayoutProps {
@@ -12,6 +12,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }) => {
   const [activeConn, setActiveConn] = useState<NimbusConnection | undefined>(undefined);
   const [currentUser, setCurrentUser] = useState(nimbusService.getCurrentUser());
+  const [collapsed, setCollapsed] = useState(false);
 
   const checkConnection = async () => {
     const id = nimbusService.getActiveId();
@@ -49,43 +50,61 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
 
   return (
     <div className="fixed inset-0 flex bg-gray-50 text-gray-900 font-sans overflow-hidden">
-      {/* Sidebar - Changed to White Theme */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 relative z-20">
-        <div className="p-4 border-b border-gray-100">
-          <div className="flex items-center gap-3 mb-5">
-            <span className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold text-white shadow-md shadow-blue-100">N</span>
-            <div>
-              <h1 className="text-lg font-extrabold text-gray-800 leading-none tracking-tight">NimbusDB</h1>
-              <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">管理后台</span>
-            </div>
+      {/* Sidebar */}
+      <aside 
+        className={`${collapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 flex flex-col flex-shrink-0 relative z-20 transition-all duration-300 ease-in-out`}
+      >
+        {/* Header */}
+        <div className={`p-4 border-b border-gray-100 ${collapsed ? 'px-2' : ''}`}>
+          <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} mb-5`}>
+            <span className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold text-white shadow-md shadow-blue-100 flex-shrink-0">N</span>
+            {!collapsed && (
+              <div className="overflow-hidden">
+                <h1 className="text-lg font-extrabold text-gray-800 leading-none tracking-tight">NimbusDB</h1>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">管理后台</span>
+              </div>
+            )}
           </div>
 
           {/* Connection Switcher */}
-          <div className="relative">
+          {!collapsed && (
+            <div className="relative">
+              <button 
+                onClick={() => setCurrentView('connections')}
+                className="w-full bg-white hover:bg-gray-50 transition-colors rounded-lg p-2.5 flex items-center justify-between border border-gray-200 shadow-sm group"
+              >
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeConn ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`} />
+                  <div className="flex flex-col items-start min-w-0">
+                    <span className="text-xs text-gray-400 font-medium">当前实例</span>
+                    <span className="text-sm font-bold text-gray-700 truncate w-full text-left">
+                      {activeConn ? activeConn.name : '未连接'}
+                    </span>
+                  </div>
+                </div>
+                <ChevronsUpDown size={16} className="text-gray-400 group-hover:text-gray-600" />
+              </button>
+            </div>
+          )}
+
+          {/* Collapsed Connection Indicator */}
+          {collapsed && (
             <button 
               onClick={() => setCurrentView('connections')}
-              className="w-full bg-white hover:bg-gray-50 transition-colors rounded-lg p-2.5 flex items-center justify-between border border-gray-200 shadow-sm group"
+              className="w-full flex justify-center py-2"
+              title={activeConn ? activeConn.name : '未连接'}
             >
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeConn ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`} />
-                <div className="flex flex-col items-start min-w-0">
-                  <span className="text-xs text-gray-400 font-medium">当前实例</span>
-                  <span className="text-sm font-bold text-gray-700 truncate w-full text-left">
-                    {activeConn ? activeConn.name : '未连接'}
-                  </span>
-                </div>
-              </div>
-              <ChevronsUpDown size={16} className="text-gray-400 group-hover:text-gray-600" />
+              <div className={`w-3 h-3 rounded-full ${activeConn ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`} />
             </button>
-          </div>
+          )}
         </div>
         
+        {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-3">
+          <ul className={`space-y-1 ${collapsed ? 'px-1' : 'px-3'}`}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentView === item.id;
-              // Disable if connection is required but not active
               const isDisabled = item.requireConnection && !activeConn;
               
               return (
@@ -93,7 +112,8 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
                   <button
                     onClick={() => !isDisabled && handleSwitchView(item.id)}
                     disabled={isDisabled}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                    title={collapsed ? item.label : undefined}
+                    className={`w-full flex items-center ${collapsed ? 'justify-center px-3' : 'gap-3 px-4'} py-2.5 text-sm font-medium rounded-lg transition-all ${
                       isActive 
                         ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100' 
                         : isDisabled 
@@ -101,15 +121,15 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
-                    <Icon size={18} className={isActive ? "text-blue-600" : ""} />
-                    {item.label}
+                    <Icon size={18} className={`flex-shrink-0 ${isActive ? "text-blue-600" : ""}`} />
+                    {!collapsed && item.label}
                   </button>
                 </li>
               );
             })}
           </ul>
 
-          {!activeConn && (
+          {!activeConn && !collapsed && (
             <div className="px-6 mt-6">
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
                 <p className="text-xs text-gray-500 text-center mb-3">
@@ -127,24 +147,46 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
         </nav>
 
         {/* User Footer */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50/50 space-y-2">
-          <div className="flex items-center gap-3 px-2 mb-2">
-             <div className="bg-white border border-gray-200 p-1.5 rounded-full text-gray-500">
-               <User size={16} />
-             </div>
-             <div className="flex-1 min-w-0">
-               <div className="text-sm font-bold text-gray-700 truncate">{currentUser?.username || 'Admin'}</div>
-             </div>
-          </div>
-          
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-xs text-gray-500 hover:text-red-600 w-full px-2 py-1.5 rounded hover:bg-white transition-colors border border-transparent hover:border-gray-100 hover:shadow-sm"
-          >
-            <LogOut size={14} />
-            退出登录
-          </button>
+        <div className={`p-4 border-t border-gray-100 bg-gray-50/50 ${collapsed ? 'px-2' : ''}`}>
+          {!collapsed ? (
+            <>
+              <div className="flex items-center gap-3 px-2 mb-2">
+                <div className="bg-white border border-gray-200 p-1.5 rounded-full text-gray-500">
+                  <User size={16} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-gray-700 truncate">{currentUser?.username || 'Admin'}</div>
+                </div>
+              </div>
+              
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-xs text-gray-500 hover:text-red-600 w-full px-2 py-1.5 rounded hover:bg-white transition-colors border border-transparent hover:border-gray-100 hover:shadow-sm"
+              >
+                <LogOut size={14} />
+                退出登录
+              </button>
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <button 
+                onClick={handleLogout}
+                title="退出登录"
+                className="p-2 text-gray-500 hover:text-red-600 rounded hover:bg-white transition-colors"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Collapse Toggle Button */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute -right-3 top-20 w-6 h-6 bg-white border border-gray-200 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-gray-600 hover:shadow-md transition-all z-30"
+        >
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
       </aside>
 
       {/* Main Content */}
