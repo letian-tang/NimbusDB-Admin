@@ -185,7 +185,7 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({ onConnect }) => {
             <Database className="text-blue-600" size={24} />
             连接管理
           </h2>
-          <p className="text-gray-500 text-sm mt-1">管理多个 NimbusDB 实例连接信息 (存储于 Server SQLite)。</p>
+          <p className="text-gray-500 text-sm mt-1">管理多个 NimbusDB 实例连接信息。</p>
         </div>
         <button 
           onClick={() => handleEdit()}

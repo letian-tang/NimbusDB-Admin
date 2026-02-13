@@ -111,14 +111,8 @@ const Dashboard: React.FC = () => {
       <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-8 text-white">
         <h2 className="text-2xl font-bold mb-2">欢迎使用 NimbusDB 管理后台</h2>
         <p className="text-slate-300 mb-6 max-w-2xl">
-          直接控制复制任务，调整性能参数，并执行 SQL 查询。
-          在此处所做的更改将立即持久化到 NimbusDB 的 sled 存储中。
+          NimbusDB是一款兼容MySQL协议的高性能单机分析型数据库。
         </p>
-        <div className="flex gap-4">
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition-colors text-sm">
-            查看文档
-          </button>
-        </div>
       </div>
     </div>
   );
