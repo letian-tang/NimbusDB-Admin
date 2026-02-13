@@ -143,7 +143,7 @@ const SqlEditor: React.FC = () => {
   };
 
   return (
-    <div className="flex gap-6 h-full">
+    <div className="flex gap-6 h-full pb-6">
       {/* Left Column: Editor & Results */}
       <div className="flex-1 flex flex-col gap-6 min-w-0">
         <div className="bg-white p-0 rounded-xl shadow-sm border border-gray-200 flex flex-col flex-shrink-0 overflow-hidden">
@@ -165,7 +165,7 @@ const SqlEditor: React.FC = () => {
           />
         </div>
 
-        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[400px] mb-4">
+        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[400px]">
           <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
             <h3 className="font-semibold text-gray-700 text-sm flex items-center gap-2">
               <FileText size={16} /> 执行结果
@@ -237,7 +237,7 @@ const SqlEditor: React.FC = () => {
       </div>
 
       {/* Right Column: Tools */}
-      <div className="w-[280px] flex-shrink-0 flex flex-col gap-4 pb-4">
+      <div className="w-[280px] flex-shrink-0 flex flex-col gap-4">
         
         {/* Connection Info Panel */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
