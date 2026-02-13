@@ -143,7 +143,7 @@ const SqlEditor: React.FC = () => {
   };
 
   return (
-    <div className="flex gap-6 h-full pb-6">
+    <div className="flex gap-6">
       {/* Left Column: Editor & Results */}
       <div className="flex-1 flex flex-col gap-6 min-w-0">
         <div className="bg-white p-0 rounded-xl shadow-sm border border-gray-200 flex flex-col flex-shrink-0 overflow-hidden">
@@ -165,7 +165,7 @@ const SqlEditor: React.FC = () => {
           />
         </div>
 
-        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[400px]">
+        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[400px] mb-4">
           <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
             <h3 className="font-semibold text-gray-700 text-sm flex items-center gap-2">
               <FileText size={16} /> 执行结果
@@ -316,7 +316,7 @@ const SqlEditor: React.FC = () => {
             </button>
         </div>
 
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mt-auto">
+        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4">
             <h4 className="text-xs font-bold text-blue-800 mb-2">快捷键提示</h4>
             <div className="space-y-1">
                 <div className="flex justify-between text-xs text-blue-600">

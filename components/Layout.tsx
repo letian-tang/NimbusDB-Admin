@@ -56,7 +56,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
             <span className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold text-white shadow-md shadow-blue-100">N</span>
             <div>
               <h1 className="text-lg font-extrabold text-gray-800 leading-none tracking-tight">NimbusDB</h1>
-              <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Admin Tool</span>
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">管理后台</span>
             </div>
           </div>
 

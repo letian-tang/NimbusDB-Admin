@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isAuthenticated } from '../../../../lib/auth';
+import { isAuthenticated } from '@/lib/auth.ts';
 import db, { createUser, updateUser, deleteUser } from '../../../../lib/db';
 
 // Create New User

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
 import db from '../../../lib/db';
-import { NimbusConnection } from '../../../types';
-import { isAuthenticated } from '../../../lib/auth';
+import { NimbusConnection } from '@/types.ts';
+import { isAuthenticated } from '@/lib/auth.ts';
 
 export async function POST(request: Request) {
   if (!isAuthenticated(request)) {

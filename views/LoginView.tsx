@@ -32,10 +32,10 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md overflow-hidden">
         <div className="bg-white p-8 text-center border-b border-gray-100">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-xl mb-4 shadow-lg shadow-blue-200">
-            <span className="text-3xl font-bold text-white">N</span>
+            <span className="text-3xl font-bold text-white">舟</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">NimbusDB Admin</h1>
-          <p className="text-gray-500 text-sm font-medium">舟谱NimbusDB管理端</p>
+          <p className="text-gray-500 text-sm font-medium">舟谱NimbusDB管理后台</p>
         </div>
 
         <div className="p-8 pt-6">
@@ -86,7 +86,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  登录系统 <ArrowRight size={18} />
+                  登录
                 </>
               )}
             </button>

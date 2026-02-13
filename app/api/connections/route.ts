@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '../../../lib/db';
-import { NimbusConnection } from '../../../types';
-import { isAuthenticated } from '../../../lib/auth';
+import { NimbusConnection } from '@/types.ts';
+import { isAuthenticated } from '@/lib/auth.ts';
 
 // GET: List all connections
 export async function GET(request: Request) {
