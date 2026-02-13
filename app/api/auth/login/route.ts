@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { validateUser, createSession } from '../../../../lib/db';
+import { validateUser, createSession } from '@/lib/db.ts';
 import crypto from 'crypto';
 
 // 阿里云 API 签名

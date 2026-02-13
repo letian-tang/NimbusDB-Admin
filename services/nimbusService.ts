@@ -42,6 +42,7 @@ class NimbusService {
     this.user = data.user;
     localStorage.setItem(this.STORAGE_KEY_TOKEN, data.token);
     localStorage.setItem(this.STORAGE_KEY_USER, JSON.stringify(data.user));
+    localStorage.setItem('nimbus_login_time', new Date().toISOString());
   }
 
   logout() {
@@ -49,6 +50,7 @@ class NimbusService {
     this.user = null;
     localStorage.removeItem(this.STORAGE_KEY_TOKEN);
     localStorage.removeItem(this.STORAGE_KEY_USER);
+    localStorage.removeItem('nimbus_login_time');
     window.location.reload();
   }
 

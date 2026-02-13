@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ViewState, NimbusConnection } from '../types';
 import { Activity, Database, Settings, ChevronsUpDown, Plus, LogOut, User, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
 import { nimbusService } from '../services/nimbusService';
+import { useConfirm } from './ConfirmDialog';
 
 interface LayoutProps {
   currentView: ViewState;
@@ -13,6 +14,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
   const [activeConn, setActiveConn] = useState<NimbusConnection | undefined>(undefined);
   const [currentUser, setCurrentUser] = useState(nimbusService.getCurrentUser());
   const [collapsed, setCollapsed] = useState(false);
+  const confirm = useConfirm();
 
   const checkConnection = async () => {
     const id = nimbusService.getActiveId();
@@ -44,8 +46,18 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
     setCurrentView(id as ViewState);
   };
 
-  const handleLogout = () => {
-    nimbusService.logout();
+  const handleLogout = async () => {
+    const confirmed = await confirm({
+      title: '退出登录',
+      message: '确定要退出登录吗？',
+      confirmText: '退出',
+      cancelText: '取消',
+      variant: 'danger',
+    });
+    
+    if (confirmed) {
+      nimbusService.logout();
+    }
   };
 
   return (

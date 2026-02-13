@@ -1,10 +1,20 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import crypto from 'crypto';
+import fs from 'fs';
 
-// Ensure the data directory exists
-const dbPath = path.resolve((process as any).cwd(), 'nimbus_admin.db');
+// 支持环境变量配置数据库路径，方便 Docker 部署
+// 默认路径: ./data/nimbus_admin.db
+const defaultDbPath = path.resolve(process.cwd(), 'data', 'nimbus_admin.db');
+const dbPath = process.env.NIMBUS_DB_PATH || defaultDbPath;
 
+// 确保数据库目录存在
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+console.log(`Database path: ${dbPath}`);
 const db = new Database(dbPath);
 
 // Initialize tables

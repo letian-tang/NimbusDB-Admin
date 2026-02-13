@@ -3,11 +3,45 @@ import { nimbusService } from '../services/nimbusService';
 import { ReplicationStatus, ReplicationState, RunningState } from '../types';
 import { Activity, Database, Server, CheckCircle2, XCircle, Clock } from 'lucide-react';
 
+// 格式化运行时间
+const formatUptime = (seconds: number): string => {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days}天`);
+  if (hours > 0) parts.push(`${hours}小时`);
+  if (minutes > 0 && days === 0) parts.push(`${minutes}分钟`);
+  
+  return parts.join(' ') || '刚刚';
+};
+
 const Dashboard: React.FC = () => {
   const [repStatus, setRepStatus] = useState<ReplicationStatus | null>(null);
+  const [uptime, setUptime] = useState(0);
 
   useEffect(() => {
     nimbusService.getReplicationStatus().then(setRepStatus);
+    
+    // 获取登录时间，计算运行时间
+    const loginTime = localStorage.getItem('nimbus_login_time');
+    if (loginTime) {
+      const startTime = new Date(loginTime).getTime();
+      const updateUptime = () => {
+        const now = Date.now();
+        const elapsed = Math.floor((now - startTime) / 1000);
+        setUptime(elapsed);
+      };
+      
+      updateUptime();
+      const timer = setInterval(updateUptime, 60000); // 每分钟更新
+      
+      return () => clearInterval(timer);
+    } else {
+      // 如果没有登录时间，设置当前时间为登录时间
+      localStorage.setItem('nimbus_login_time', new Date().toISOString());
+    }
   }, []);
 
   const StatusBadge = ({ active }: { active: boolean }) => (
@@ -32,7 +66,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           <div className="text-xs text-gray-400 mt-2 flex items-center gap-1">
-            <Clock size={12} /> 运行时间: 4天 12小时
+            <Clock size={12} /> 会话时长: {formatUptime(uptime)}
           </div>
         </div>
 
