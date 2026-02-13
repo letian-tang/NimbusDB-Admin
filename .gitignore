@@ -23,4 +23,4 @@ dist-ssr
 *.sln
 *.sw?
 /.next/
-/nimbus_admin.db
+/data/
