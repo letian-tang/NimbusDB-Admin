@@ -260,6 +260,19 @@ class NimbusService {
     await this.runSql(`SET NIMBUS INCLUDED_DBS = '${dbs}'`);
   }
 
+  // --- Excluded DBs ---
+
+  async getExcludedDbs(): Promise<string> {
+    const result = await this.runSql('SHOW NIMBUS EXCLUDED_DBS');
+    const row = result.rows[0];
+    if (!row) return "";
+    return Object.values(row)[0] as string || "";
+  }
+
+  async setExcludedDbs(dbs: string): Promise<void> {
+    await this.runSql(`SET NIMBUS EXCLUDED_DBS = '${dbs}'`);
+  }
+
   // --- Schema Sync ---
 
   async getSchemaSync(): Promise<boolean> {

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Loader2, Database, Table as TableIcon, AlignLeft, Search, FileText } from 'lucide-react';
+import { Play, Loader2, Database, Table as TableIcon, AlignLeft, Search, FileText, ChevronDown } from 'lucide-react';
 import { nimbusService } from '../services/nimbusService';
 import { QueryResult } from '../types';
 
@@ -7,12 +7,18 @@ const SqlEditor: React.FC = () => {
   const [query, setQuery] = useState("SELECT * FROM users LIMIT 10;");
   const [result, setResult] = useState<QueryResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isExplainResult, setIsExplainResult] = useState(false);
   
   // Context State
   const [currentDb, setCurrentDb] = useState<string>("");
   const [dbList, setDbList] = useState<string[]>([]);
   const [tableList, setTableList] = useState<string[]>([]);
   const [limit, setLimit] = useState<number>(100);
+  
+  // Table Search State
+  const [tableSearch, setTableSearch] = useState<string>("");
+  const [showTableDropdown, setShowTableDropdown] = useState(false);
+  const tableDropdownRef = useRef<HTMLDivElement>(null);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -67,14 +73,15 @@ const SqlEditor: React.FC = () => {
     }
   };
 
-  const handleTableSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const table = e.target.value;
-    if (!table) return;
+  const handleTableSelect = async (tableName: string) => {
+    if (!tableName) return;
 
     // View Structure: Run DESCRIBE
     setLoading(true);
+    setTableSearch(tableName);
+    setShowTableDropdown(false);
     try {
-      const res = await nimbusService.executeQuery(`DESCRIBE ${table}`, currentDb);
+      const res = await nimbusService.executeQuery(`DESCRIBE ${tableName}`, currentDb);
       setResult(res);
     } catch (err: any) {
       alert("获取表结构失败: " + err.message);
@@ -83,9 +90,26 @@ const SqlEditor: React.FC = () => {
     }
   };
 
+  // Filter tables by search
+  const filteredTables = tableList.filter(t => 
+    t.toLowerCase().includes(tableSearch.toLowerCase())
+  );
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (tableDropdownRef.current && !tableDropdownRef.current.contains(e.target as Node)) {
+        setShowTableDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleRun = async (isExplain = false) => {
     setLoading(true);
     setResult(null); 
+    setIsExplainResult(isExplain);
     
     let sqlToRun = query;
     if (textareaRef.current) {
@@ -103,6 +127,22 @@ const SqlEditor: React.FC = () => {
     // Apply Explain if requested
     if (isExplain) {
       sqlToRun = `EXPLAIN ${sqlToRun}`;
+    } else {
+      // Auto-add LIMIT for SELECT statements if not present
+      const upperSql = sqlToRun.toUpperCase().trim();
+      if (upperSql.startsWith('SELECT')) {
+        // Check if LIMIT already exists (case-insensitive)
+        const hasLimit = /\bLIMIT\s+\d+/i.test(sqlToRun);
+        if (!hasLimit) {
+          // Remove trailing semicolon if present, add LIMIT, then add semicolon back
+          const hasSemicolon = sqlToRun.trim().endsWith(';');
+          let cleanSql = sqlToRun.trim();
+          if (hasSemicolon) {
+            cleanSql = cleanSql.slice(0, -1);
+          }
+          sqlToRun = `${cleanSql} LIMIT ${limit}${hasSemicolon ? ';' : ''}`;
+        }
+      }
     }
 
     try {
@@ -186,7 +226,12 @@ const SqlEditor: React.FC = () => {
             
             {result ? (
               <>
-                {result.columns.length > 0 ? (
+                {isExplainResult && result.rows.length > 0 ? (
+                  // EXPLAIN result: display as preformatted text
+                  <pre className="p-6 font-mono text-sm text-gray-800 whitespace-pre overflow-auto leading-relaxed">
+                    {result.rows.map(row => Object.values(row).join('\n')).join('\n')}
+                  </pre>
+                ) : result.columns.length > 0 ? (
                   <table className="w-full text-left text-sm whitespace-nowrap">
                     <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                       <tr>
@@ -256,19 +301,44 @@ const SqlEditor: React.FC = () => {
               </div>
            </div>
 
-           <div>
+           <div ref={tableDropdownRef}>
               <label className="text-xs font-bold text-gray-500 uppercase mb-1.5 block">查看表结构</label>
               <div className="relative">
                  <TableIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                 <select 
-                    onChange={handleTableSelect}
-                    className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+                 <input
+                    type="text"
+                    value={tableSearch}
+                    onChange={(e) => {
+                      setTableSearch(e.target.value);
+                      setShowTableDropdown(true);
+                    }}
+                    onFocus={() => setShowTableDropdown(true)}
+                    placeholder={currentDb ? "输入表名搜索..." : "请先选择数据库"}
                     disabled={!currentDb}
-                    defaultValue=""
-                 >
-                   <option value="" disabled>选择表以查看...</option>
-                   {tableList.map(t => <option key={t} value={t}>{t}</option>)}
-                 </select>
+                    className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                 />
+                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+                 
+                 {showTableDropdown && currentDb && filteredTables.length > 0 && (
+                   <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-auto">
+                     {filteredTables.map(t => (
+                       <div
+                         key={t}
+                         onClick={() => handleTableSelect(t)}
+                         className="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer flex items-center gap-2"
+                       >
+                         <TableIcon size={12} className="text-gray-400" />
+                         <span>{t}</span>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+                 
+                 {showTableDropdown && currentDb && tableSearch && filteredTables.length === 0 && (
+                   <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm text-gray-400">
+                     无匹配表名
+                   </div>
+                 )}
               </div>
            </div>
 

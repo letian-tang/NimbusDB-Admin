@@ -136,23 +136,28 @@ const SourcePanel: React.FC = () => {
 const AdvancedPanel: React.FC = () => {
   const [binlog, setBinlog] = useState<BinlogPosition | null>(null);
   const [includedDbs, setIncludedDbs] = useState<string>('');
+  const [excludedDbs, setExcludedDbs] = useState<string>('');
   const [schemaSync, setSchemaSync] = useState<boolean>(true);
   const [newBinlogFile, setNewBinlogFile] = useState('');
   const [newBinlogPos, setNewBinlogPos] = useState(0);
   const [dbsInput, setDbsInput] = useState('');
+  const [excludedDbsInput, setExcludedDbsInput] = useState('');
   const confirm = useConfirm();
 
   useEffect(() => {
     Promise.all([
       nimbusService.getBinlogPosition(), 
       nimbusService.getIncludedDbs(),
+      nimbusService.getExcludedDbs(),
       nimbusService.getSchemaSync()
-    ]).then(([b, d, s]) => {
+    ]).then(([b, inc, exc, s]) => {
       setBinlog(b);
       setNewBinlogFile(b.file);
       setNewBinlogPos(b.position);
-      setIncludedDbs(d);
-      setDbsInput(d);
+      setIncludedDbs(inc);
+      setDbsInput(inc);
+      setExcludedDbs(exc);
+      setExcludedDbsInput(exc);
       setSchemaSync(s);
     });
   }, []);
@@ -176,6 +181,11 @@ const AdvancedPanel: React.FC = () => {
   const handleDbsSave = async () => {
     await nimbusService.setIncludedDbs(dbsInput);
     setIncludedDbs(dbsInput);
+  };
+
+  const handleExcludedDbsSave = async () => {
+    await nimbusService.setExcludedDbs(excludedDbsInput);
+    setExcludedDbs(excludedDbsInput);
   };
 
   const handleSchemaSyncToggle = async () => {
@@ -217,6 +227,19 @@ const AdvancedPanel: React.FC = () => {
             </div>
         </div>
         <div className="text-[10px] text-gray-400 mt-2">当前生效: <span className="font-mono text-gray-600">{includedDbs || 'ALL'}</span></div>
+      </div>
+
+      {/* Excluded DBs */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 flex flex-col justify-between">
+        <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">黑名单数据库 (Excluded DBs)</label>
+            <p className="text-xs text-gray-400 mb-3">排除指定的数据库，多个用逗号分隔。</p>
+            <div className="flex gap-2 mb-2">
+            <input type="text" value={excludedDbsInput} onChange={(e) => setExcludedDbsInput(e.target.value)} placeholder="mysql,information_schema (留空为不限制)" className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+            <button onClick={handleExcludedDbsSave} className="bg-blue-600 text-white px-3 py-2 rounded text-xs hover:bg-blue-700 whitespace-nowrap">更新</button>
+            </div>
+        </div>
+        <div className="text-[10px] text-gray-400 mt-2">当前生效: <span className="font-mono text-gray-600">{excludedDbs || 'NONE'}</span></div>
       </div>
 
       {/* Binlog Danger Zone */}
