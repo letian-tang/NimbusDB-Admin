@@ -234,7 +234,7 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({ onConnect }) => {
                   className={`w-full py-2.5 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
                     isActive 
                       ? 'bg-green-50 text-green-700 cursor-default' 
-                      : 'bg-gray-900 text-white hover:bg-gray-800'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                 >
                   {isConnecting ? (

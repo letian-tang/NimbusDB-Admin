@@ -36,9 +36,9 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
   }, [currentView]);
 
   const navItems = [
-    { id: 'dashboard', label: '概览', icon: Activity, requireConnection: true },
-    { id: 'sql', label: 'SQL 编辑器', icon: Database, requireConnection: true },
+    { id: 'dashboard', label: '首页', icon: Activity, requireConnection: true },
     { id: 'users', label: '用户管理', icon: Shield, requireConnection: false },
+    { id: 'sql', label: 'SQL 编辑器', icon: Database, requireConnection: true },
     { id: 'settings', label: '实例设置', icon: Settings, requireConnection: true },
   ];
 
@@ -69,7 +69,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }
         {/* Header */}
         <div className={`p-4 border-b border-gray-100 ${collapsed ? 'px-2' : ''}`}>
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} mb-5`}>
-            <span className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold text-white shadow-md shadow-blue-100 flex-shrink-0">N</span>
+            <span className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold text-white shadow-md shadow-blue-100 flex-shrink-0">舟</span>
             {!collapsed && (
               <div className="overflow-hidden">
                 <h1 className="text-lg font-extrabold text-gray-800 leading-none tracking-tight">NimbusDB</h1>

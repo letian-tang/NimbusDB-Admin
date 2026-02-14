@@ -130,15 +130,14 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!username || !password) {
-      setError('请输入用户名和密码');
-      return;
-    }
-
     const sceneId = process.env.NEXT_PUBLIC_ALIYUN_CAPTCHA_SCENE_ID;
 
     // 如果验证码未配置，直接登录
     if (!sceneId || sceneId === 'your_scene_id_here') {
+      if (!username || !password) {
+        setError('请输入用户名和密码');
+        return;
+      }
       setLoading(true);
       try {
         await nimbusService.login(username, password);
@@ -151,18 +150,16 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    // 如果验证码已初始化，点击按钮会自动弹出验证码
-    // 如果未初始化，直接登录
-    if (!isInitializedRef.current) {
-      setLoading(true);
-      try {
-        await nimbusService.login(username, password);
-        onLoginSuccess();
-      } catch (err: any) {
-        setError(err.message || '登录失败，请检查用户名或密码');
-      } finally {
-        setLoading(false);
-      }
+    // 验证码已配置，点击按钮会触发验证码弹窗
+    // 验证成功后在 success 回调中执行登录
+  };
+
+  // 验证码触发前的验证（通过事件捕获）
+  const handleButtonClick = (e: React.MouseEvent) => {
+    if (!username || !password) {
+      e.preventDefault();
+      e.stopPropagation();
+      setError('请输入用户名和密码');
     }
   };
 
@@ -221,11 +218,12 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             {/* 验证码容器（隐藏） */}
             <div id="captcha-element" className="hidden"></div>
 
-            {/* 登录按钮，作为验证码触发按钮 */}
+            {/* 登录按钮（同时也是验证码触发按钮） */}
             <button
               type="submit"
               id="captcha-button"
               disabled={loading}
+              onClickCapture={handleButtonClick}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed mt-4"
             >
               {loading ? (

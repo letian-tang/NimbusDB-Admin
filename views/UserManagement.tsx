@@ -99,7 +99,11 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const formatDate = (ts: number) => new Date(ts).toLocaleString();
+  const formatDate = (ts: number) => {
+    const d = new Date(ts);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  };
 
   return (
     <div className="w-full space-y-6 relative">
@@ -113,7 +117,7 @@ const UserManagement: React.FC = () => {
         </div>
         <button 
           onClick={openCreateModal}
-          className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm"
         >
           <Plus size={18} /> 新增用户
         </button>
